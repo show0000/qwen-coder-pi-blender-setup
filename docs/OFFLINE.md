@@ -71,6 +71,26 @@ source ~/.config/qwen-coder/env.sh      # 또는 새 터미널
 cd ~/your-project && pi --model local/qwen3-coder-next
 ```
 
+## USB 대신 내부망으로 옮기기 (더 빠름)
+
+두 Mac 이 같은 내부망(또는 Thunderbolt 케이블 직결)에 있으면 USB 없이 rsync 로 옮길 수 있습니다. 온라인 Mac 에서 시스템 설정 → 일반 → 공유 → 원격 로그인을 켜면 SSH/SFTP/rsync 가 열립니다.
+
+```bash
+# 오프라인 Mac 에서 (사용자명/IP 는 환경에 맞게)
+SRC=user@192.168.0.10
+rsync -ah --progress --partial --inplace "$SRC:~/qwen-coder-pi-blender-setup/bundle/" ~/qwen-bundle/
+~/qwen-bundle/repo/scripts/offline/install_offline.sh ~/qwen-bundle "$SRC:~/Downloads/Qwen3-Coder-Next-GGUF"
+```
+
+모델 경로 인자는 rsync 에 그대로 전달되므로 `user@host:path` 원격 경로를 받습니다. 끊기면 같은 명령으로 이어받고, `-z` 압축은 GGUF 에 효과가 없으니 쓰지 않습니다. 73GB 기준 유선 1GbE 약 12분, Thunderbolt 브리지(10Gbps+) 2~3분, Wi-Fi 6 20~40분. 전송 후 원격 로그인은 다시 끄세요.
+
+모델 파일 자체는 hf CLI 없이 브라우저나 curl 로 받을 수 있습니다 (UD-Q6_K_XL 은 3개 샤드, 총 73GB):
+
+```bash
+BASE=https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF/resolve/main/UD-Q6_K_XL
+for i in 1 2 3; do f="Qwen3-Coder-Next-UD-Q6_K_XL-0000${i}-of-00003.gguf"; curl -L -C - --retry 20 -o "$f" "$BASE/$f"; done
+```
+
 ## 오프라인 모드에서 달라지는 점
 
 - `OFFLINE=1` 이면 `00_prereqs.sh`, `01_download_model.sh` 는 실행을 거부합니다.
