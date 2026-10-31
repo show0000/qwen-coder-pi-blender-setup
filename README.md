@@ -6,7 +6,7 @@ GUI 모델 앱(LM Studio, Ollama)은 쓰지 않습니다. 전부 brew / uv tool 
 
 ```
 터미널 ── pi (coding agent) ──▶ http://127.0.0.1:8080/v1  (llama-server, 또는 mlx_lm.server)
-            │                          └─ Qwen3-Coder-Next GGUF UD-Q4_K_XL (~46GB, 262K ctx)
+            │                          └─ Qwen3-Coder-Next GGUF UD-Q6_K_XL (~68GB, 262K ctx)
             ├─ MCP: blender    ──▶ uvx mcp-for-blender  ──▶ Blender addon (port 9876)
             ├─ MCP: orca       ──▶ orca mcp serve       ──▶ 워크트리/run 상태 (~/.orca/orca.db)
             └─ MCP: orcaslicer ──▶ uvx orcaslicer-mcp   ──▶ OrcaSlicer Remote API (선택)
@@ -18,10 +18,10 @@ orca ── run 마다 git worktree 생성 ──▶ pi-local "<task>" (비대�
 | 항목 | 값 |
 |---|---|
 | 모델 | Qwen/Qwen3-Coder-Next (80B total / 3B active MoE), Apache 2.0 |
-| 가중치 | unsloth/Qwen3-Coder-Next-GGUF, UD-Q4_K_XL 약 46GB (대안: mlx-community/Qwen3-Coder-Next-4bit) |
+| 가중치 | unsloth/Qwen3-Coder-Next-GGUF, UD-Q6_K_XL 약 68GB (대안: mlx-community/Qwen3-Coder-Next-6bit) |
 | 컨텍스트 | 네이티브 262,144 토큰. 기본 셋업은 131,072로 로드 |
 | 예상 속도 | M3 Max 기준 약 20~30 tok/s |
-| 메모리 | 모델 46GB + KV 캐시 수 GB. Blender와 OrcaSlicer를 동시에 띄워도 128GB 안에서 여유 있음 |
+| 메모리 | 모델 68GB + KV 캐시 수 GB. Blender와 OrcaSlicer를 동시에 띄워도 128GB 안에서 여유 있음 (UE5까지 동시에 띄우면 4bit 권장) |
 
 ## 빠른 시작
 
@@ -30,7 +30,7 @@ git clone https://github.com/show0000/qwen-coder-pi-blender-setup.git && cd qwen
 chmod +x scripts/*.sh
 
 ./scripts/00_prereqs.sh              # Homebrew, uv, Node 22, pi, llama.cpp, hf CLI
-./scripts/01_download_model.sh       # Hugging Face에서 GGUF UD-Q4_K_XL 다운로드 (~46GB)
+./scripts/01_download_model.sh       # Hugging Face에서 GGUF UD-Q6_K_XL 다운로드 (~68GB)
 ./scripts/02_serve_model.sh --bg     # llama-server 백그라운드 기동 (포트 8080)
 ./scripts/03_setup_pi.sh             # ~/.pi/agent/models.json 에 로컬 provider 등록
 ./scripts/04_setup_blender_mcp.sh    # Blender 애드온 설치 + pi MCP 등록
@@ -55,14 +55,29 @@ ORCA_API_TOKEN=... ./scripts/07_setup_orcaslicer_mcp.sh
 
 ### 1. 모델 다운로드 (01_download_model.sh)
 
-기본값은 `unsloth/Qwen3-Coder-Next-GGUF` 에서 `UD-Q4_K_XL` 양자화만 골라 `~/models/unsloth/Qwen3-Coder-Next-GGUF/` 로 받습니다 (`--include "*UD-Q4_K_XL*"`). 분할 샤드(00001-of-N)는 스크립트가 자동으로 찾습니다.
+기본값은 `unsloth/Qwen3-Coder-Next-GGUF` 에서 `UD-Q6_K_XL` 양자화만 골라 `~/models/unsloth/Qwen3-Coder-Next-GGUF/` 로 받습니다 (`--include "*UD-Q6_K_XL*"`). 분할 샤드(00001-of-N)는 스크립트가 자동으로 찾습니다.
 
 다른 양자화나 백엔드:
 
 ```bash
-QUANT=UD-Q5_K_XL ./scripts/01_download_model.sh     # 품질 ↑ (~55GB)
-QUANT=Q8_0       ./scripts/01_download_model.sh     # ~85GB, 128GB에서 동작하지만 느림
-BACKEND=mlx      ./scripts/01_download_model.sh     # mlx-community/Qwen3-Coder-Next-4bit (safetensors)
+QUANT=UD-Q4_K_XL ./scripts/01_download_model.sh     # ~50GB, 더 빠름. Blender+UE5 동시 작업 시 권장
+QUANT=UD-Q5_K_XL ./scripts/01_download_model.sh     # ~57GB, 중간
+QUANT=Q8_0       ./scripts/01_download_model.sh     # ~85GB, 거의 무손실이지만 느림
+BACKEND=mlx      ./scripts/01_download_model.sh     # mlx-community/Qwen3-Coder-Next-6bit (safetensors)
+```
+
+양자화 비교 (80B-A3B, 활성 3B라 비트 수가 속도에 주는 영향은 밀집 모델보다 작음):
+
+| 양자화 | 크기 | 특징 |
+|---|---|---|
+| UD-Q4_K_XL | ~50GB | 속도 최우선, 메모리 여유 최대 |
+| UD-Q5_K_XL | ~57GB | 중간 |
+| UD-Q6_K_XL (기본) | ~68GB | 품질/속도 균형. 128GB 환경 권장 |
+| Q8_0 / UD-Q8_K_XL | ~85GB | 거의 무손실, 속도 저하와 메모리 여유 감소
+
+```bash
+# 서버/점검 스크립트도 같은 QUANT 로 호출해야 같은 파일을 찾습니다 (기본값이면 생략)
+QUANT=UD-Q4_K_XL ./scripts/02_serve_model.sh --bg
 ```
 
 ### 2. 모델 서버 (02_serve_model.sh)

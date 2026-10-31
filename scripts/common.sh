@@ -18,10 +18,10 @@ export PORT="${PORT:-8080}"
 case "$BACKEND" in
   llama)
     export HF_REPO="${HF_REPO:-unsloth/Qwen3-Coder-Next-GGUF}"
-    export QUANT="${QUANT:-UD-Q4_K_XL}"                      # ~46GB. UD-Q5_K_XL / Q6_K / Q8_0 also fit in 128GB
+    export QUANT="${QUANT:-UD-Q6_K_XL}"                      # ~68GB. UD-Q4_K_XL (~50GB, faster) / Q8_0 (~85GB) also fit in 128GB
     ;;
   mlx)
-    export HF_REPO="${HF_REPO:-mlx-community/Qwen3-Coder-Next-4bit}"
+    export HF_REPO="${HF_REPO:-mlx-community/Qwen3-Coder-Next-6bit}"
     export QUANT=""
     ;;
   *) echo "BACKEND must be llama or mlx (got: $BACKEND)" >&2; exit 1 ;;
