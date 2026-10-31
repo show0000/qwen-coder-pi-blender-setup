@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "blender": {
+      "command": "uvx",
+      "args": ["mcp-for-blender"],
+      "env": { "DISABLE_TELEMETRY": "true" }
+    },
+    "orcaslicer": {
+      "command": "uvx",
+      "args": ["orcaslicer-mcp"],
+      "env": {
+        "ORCA_API_TOKEN": "${ORCA_API_TOKEN}",
+        "ORCA_API_URL": "http://127.0.0.1:13130"
+      }
+    }
+  }
+}

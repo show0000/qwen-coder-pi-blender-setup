@@ -1,0 +1,15 @@
+SHELL := /bin/bash
+S := scripts
+
+.PHONY: all prereqs download serve pi blender orca orcaslicer check
+
+all: prereqs download pi blender orca check
+
+prereqs:  ; $(S)/00_prereqs.sh
+download: ; $(S)/01_download_model.sh
+serve:    ; $(S)/02_serve_model.sh
+pi:       ; $(S)/03_setup_pi.sh
+blender:  ; $(S)/04_setup_blender_mcp.sh
+orca:     ; $(S)/05_setup_orca.sh
+orcaslicer: ; $(S)/07_setup_orcaslicer_mcp.sh
+check:    ; $(S)/check.sh

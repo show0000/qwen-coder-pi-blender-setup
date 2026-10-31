@@ -1,0 +1,7 @@
+# never commit tokens or weights
+*.token
+.env
+out/
+*.safetensors
+*.gguf
+.DS_Store
