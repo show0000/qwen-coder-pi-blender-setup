@@ -9,7 +9,7 @@ Homebrew 는 오프라인에서 사실상 쓸 수 없으므로 이 경로에서�
                                    ├─ node/      Node 22 tarball (nodejs.org)
                                    ├─ pi/        pi + 전체 node_modules (npm prefix tarball)
                                    ├─ bin/       uv, uvx, jq, orca
-                                   ├─ python/    uv 관리 Python 3.12 (python-build-standalone)
+                                   ├─ python.tgz uv 관리 Python 3.12 (python-build-standalone)
                                    ├─ wheels/    mcp-for-blender, orcaslicer-mcp, huggingface_hub + 의존성 wheel
                                    ├─ llama/     llama.cpp macOS arm64 prebuilt (Metal 포함)
                                    ├─ repo/      이 저장소 사본
@@ -47,7 +47,7 @@ orca 는 공개 릴리스 바이너리가 없어서, 번들 머신에 `orca`(bre
 전제: Xcode Command Line Tools 가 깔려 있어야 합니다 (git 때문). 없으면 Apple 개발자 사이트에서 CLT 설치 패키지(.dmg)를 미리 받아 두세요. Blender 도 설치 파일을 따로 가져가야 합니다.
 
 ```bash
-cp -r /Volumes/USB/bundle ~/qwen-bundle
+cp -r /Volumes/USB/bundle ~/qwen-bundle          # 또는 tar -xzf /Volumes/USB/bundle.tgz -C ~ && mv ~/bundle ~/qwen-bundle
 ~/qwen-bundle/repo/scripts/offline/install_offline.sh ~/qwen-bundle /Volumes/USB/Qwen3-Coder-Next-GGUF
 #                                                      ^ 번들 경로        ^ 가중치 폴더 (번들에 models/ 가 있으면 생략)
 ```
@@ -83,6 +83,8 @@ cd ~/your-project && pi --model local/qwen3-coder-next
 번들을 다시 만들어 같은 명령으로 설치하면 됩니다. `install_offline.sh` 는 기존 설치를 덮어쓰고(`--reinstall`), `models.json`/`mcp.json` 은 병합하므로 다른 설정을 지우지 않습니다. 가중치가 이미 있으면 두 번째 인자를 생략하세요.
 
 ## 문제 해결
+
+- USB 복사 중 `cpython-3.12-macos-aarch64-none: No such file or directory`: exFAT/FAT32 는 심볼릭 링크를 저장하지 못해 생기는 메시지로, 구버전 번들의 python/ 디렉터리에만 해당합니다. 실제 Python 은 버전이 붙은 폴더에 있어 설치에는 영향이 없습니다. 현재 번들은 python.tgz 로 묶여 이 문제가 없고, 폴더 전체를 `tar -czf bundle.tgz bundle` 로 한 파일로 옮기면 어떤 파일시스템에서도 안전합니다.
 
 - `llama-server` 가 "killed" 또는 "cannot be opened": quarantine 제거가 안 된 경우입니다. `xattr -dr com.apple.quarantine ~/.local/opt/llama.cpp` 후 재시도.
 - `unknown model architecture: qwen3next`: llama.cpp 태그가 오래됐습니다. 최신 `LLAMA_TAG` 로 번들을 다시 만드세요.

@@ -106,11 +106,15 @@ EOF
 if [[ "$WITH_MODEL" == "1" ]]; then
   info "모델 다운로드 → $B/models/$HF_REPO"
   mkdir -p "$B/models/$HF_REPO"
-  UV_PYTHON_INSTALL_DIR="$B/python" "$B/bin/uv" tool run --from "huggingface_hub[cli,hf_xet]" hf download "$HF_REPO" --local-dir "$B/models/$HF_REPO" ${QUANT:+--include "*${QUANT}*"}
+  UV_PYTHON_INSTALL_DIR="$B/python" "$B/bin/uv" tool run --python "$PY_BIN" --from "huggingface_hub[cli,hf_xet]" hf download "$HF_REPO" --local-dir "$B/models/$HF_REPO" ${QUANT:+--include "*${QUANT}*"}
 fi
 
+# pack the uv python dir: it contains symlinks, which exFAT/FAT32 USB sticks cannot store
+tar -C "$B" -czf "$B/python.tgz" python && rm -rf "$B/python"
 rm -rf "$NODE_TMP" "$VENV"
 info "번들 완료: $B  ($(du -sh "$B" | cut -f1))"
+info "USB 가 exFAT/FAT32 라면 폴더째 복사해도 되지만, 가장 안전한 방법은 한 파일로 묶는 것입니다:"
+info "  tar -C \"$(dirname "$B")\" -czf \"$(dirname "$B")/$(basename "$B").tgz\" \"$(basename "$B")\""
 cat <<EOF
 
 대상(오프라인) Mac 에서:

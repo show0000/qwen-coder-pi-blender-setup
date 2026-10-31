@@ -43,7 +43,12 @@ chmod +x "$BIN/pi"; unq "$OPT/node" "$OPT/pi"
 # ---- uv + python + wheels ----------------------------------------------------
 info "uv / Python $PY_VERSION"
 cp "$B/bin/uv" "$B/bin/uvx" "$BIN/"; chmod +x "$BIN/uv" "$BIN/uvx"; unq "$BIN/uv" "$BIN/uvx"
-rsync -a "$B/python/" "$HOME/.local/share/uv/python/"; unq "$HOME/.local/share/uv/python"
+if [[ -f "$B/python.tgz" ]]; then
+  tar -xzf "$B/python.tgz" -C "$HOME/.local/share/uv"          # extracts python/ (symlinks restored)
+else
+  rsync -a "$B/python/" "$HOME/.local/share/uv/python/"        # older bundles: plain directory
+fi
+unq "$HOME/.local/share/uv/python"
 export UV_PYTHON_DOWNLOADS=never UV_OFFLINE=1 UV_NO_INDEX=1 UV_FIND_LINKS="$B/wheels"
 PYV=$("$BIN/uv" python find "$PY_VERSION")
 info "MCP 서버 설치 (uv tool, wheelhouse)"
