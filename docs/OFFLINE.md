@@ -1,0 +1,90 @@
+# 오프라인(방화벽) 설치
+
+방화벽 안의 Mac 에서는 Hugging Face, GitHub, npm, PyPI 가 모두 막혀 있다고 가정합니다.
+인터넷이 되는 다른 Apple Silicon Mac(또는 같은 Mac 을 잠시 외부망에 연결)에서 번들을 만들어 USB 로 옮깁니다.
+Homebrew 는 오프라인에서 사실상 쓸 수 없으므로 이 경로에서는 전혀 사용하지 않고, 모든 것을 `~/.local` 아래에 설치합니다 (sudo 불필요).
+
+```
+[온라인 Mac]  make_bundle.sh  ──▶  bundle/  ──(USB)──▶  [오프라인 Mac]  install_offline.sh
+                                   ├─ node/      Node 22 tarball (nodejs.org)
+                                   ├─ pi/        pi + 전체 node_modules (npm prefix tarball)
+                                   ├─ bin/       uv, uvx, jq, orca
+                                   ├─ python/    uv 관리 Python 3.12 (python-build-standalone)
+                                   ├─ wheels/    mcp-for-blender, orcaslicer-mcp, huggingface_hub + 의존성 wheel
+                                   ├─ llama/     llama.cpp macOS arm64 prebuilt (Metal 포함)
+                                   ├─ repo/      이 저장소 사본
+                                   ├─ models/    (--with-model 일 때) GGUF
+                                   └─ manifest.env
+```
+
+## 1. 온라인 Mac 에서 번들 만들기
+
+필요한 것: macOS Apple Silicon, curl, python3(시스템 기본), rsync. Homebrew 나 Node 가 없어도 됩니다 (스크립트가 Node 를 내려받아 번들 안에서만 씁니다).
+
+```bash
+git clone https://github.com/show0000/qwen-coder-pi-blender-setup.git
+cd qwen-coder-pi-blender-setup
+./scripts/offline/make_bundle.sh ./bundle                 # 바이너리/패키지만 (수백 MB)
+./scripts/offline/make_bundle.sh ./bundle --with-model    # 모델까지 (+68GB, UD-Q6_K_XL)
+```
+
+옵션 (환경변수):
+
+| 변수 | 기본 | 설명 |
+|---|---|---|
+| `QUANT` | UD-Q6_K_XL | `--with-model` 일 때 받을 GGUF 양자화 |
+| `NODE_VERSION` | v22 최신 | 예: `v22.20.0` |
+| `LLAMA_TAG` | 최신 nightly | 예: `b11669`. Qwen3-Next 지원이 필요하므로 오래된 태그는 피하세요 |
+| `PY_VERSION` | 3.12 | uv 관리 Python |
+| `WITH_MLX` | 0 | 1 이면 mlx-lm wheel 도 포함 (BACKEND=mlx 용, 수백 MB 추가) |
+
+orca 는 공개 릴리스 바이너리가 없어서, 번들 머신에 `orca`(brew install orca-cli/tap/orca) 또는 `go` 가 있을 때만 포함됩니다. 없으면 경고만 내고 건너뜁니다 (orca 는 선택 항목).
+
+모델을 번들에 넣지 않았다면 가중치는 따로 받아 USB 에 담으세요. 같은 머신에서 `hf download unsloth/Qwen3-Coder-Next-GGUF --include "*UD-Q6_K_XL*" --local-dir <USB>/Qwen3-Coder-Next-GGUF` 가 가장 간단합니다 (`uvx --from "huggingface_hub[cli]" hf download ...`).
+
+## 2. 오프라인 Mac 에서 설치
+
+전제: Xcode Command Line Tools 가 깔려 있어야 합니다 (git 때문). 없으면 Apple 개발자 사이트에서 CLT 설치 패키지(.dmg)를 미리 받아 두세요. Blender 도 설치 파일을 따로 가져가야 합니다.
+
+```bash
+cp -r /Volumes/USB/bundle ~/qwen-bundle
+~/qwen-bundle/repo/scripts/offline/install_offline.sh ~/qwen-bundle /Volumes/USB/Qwen3-Coder-Next-GGUF
+#                                                      ^ 번들 경로        ^ 가중치 폴더 (번들에 models/ 가 있으면 생략)
+```
+
+설치 스크립트가 하는 일:
+
+1. Node, pi 를 `~/.local/opt/` 에 풀고 `~/.local/bin/pi` 래퍼 생성 (PI_OFFLINE=1 고정)
+2. uv, Python, wheelhouse 로 `mcp-for-blender`, `orcaslicer-mcp`, `hf` 를 `uv tool install --offline` 설치
+3. llama.cpp prebuilt 를 풀고 `~/.local/bin/llama-server` 래퍼 생성
+4. jq, orca 복사. 모든 바이너리의 quarantine 속성 제거 (Gatekeeper 차단 방지)
+5. `~/.config/qwen-coder/env.sh` 에 PATH 와 `OFFLINE=1`, MCP 실행 파일 경로를 기록하고 `.zprofile`/`.zshrc` 에서 source
+6. 가중치를 `~/models/unsloth/Qwen3-Coder-Next-GGUF/` 로 복사
+7. `03_setup_pi.sh`, `04_setup_blender_mcp.sh`, (orca 가 있으면) `05_setup_orca.sh` 실행
+
+이후는 온라인과 동일합니다.
+
+```bash
+source ~/.config/qwen-coder/env.sh      # 또는 새 터미널
+~/qwen-bundle/repo/scripts/02_serve_model.sh --bg
+~/qwen-bundle/repo/scripts/check.sh
+cd ~/your-project && pi --model local/qwen3-coder-next
+```
+
+## 오프라인 모드에서 달라지는 점
+
+- `OFFLINE=1` 이면 `00_prereqs.sh`, `01_download_model.sh` 는 실행을 거부합니다.
+- MCP 설정(`~/.pi/agent/mcp.json`)의 command 가 `uvx ...` 대신 설치된 절대 경로(`~/.local/bin/mcp-for-blender` 등)로 기록됩니다. uvx 는 실행 시마다 PyPI 를 조회하므로 오프라인에서 쓸 수 없습니다.
+- pi 는 `PI_OFFLINE=1`, `PI_SKIP_VERSION_CHECK=1` 로 동작하여 pi.dev 카탈로그 갱신과 버전 체크를 하지 않습니다.
+- Blender 애드온 설치(`install-addon`)는 패키지 안의 파일을 복사하는 것이라 네트워크 없이 동작합니다.
+
+## 업데이트
+
+번들을 다시 만들어 같은 명령으로 설치하면 됩니다. `install_offline.sh` 는 기존 설치를 덮어쓰고(`--reinstall`), `models.json`/`mcp.json` 은 병합하므로 다른 설정을 지우지 않습니다. 가중치가 이미 있으면 두 번째 인자를 생략하세요.
+
+## 문제 해결
+
+- `llama-server` 가 "killed" 또는 "cannot be opened": quarantine 제거가 안 된 경우입니다. `xattr -dr com.apple.quarantine ~/.local/opt/llama.cpp` 후 재시도.
+- `unknown model architecture: qwen3next`: llama.cpp 태그가 오래됐습니다. 최신 `LLAMA_TAG` 로 번들을 다시 만드세요.
+- `uv tool install` 이 네트워크를 시도: `UV_OFFLINE=1 UV_NO_INDEX=1` 이 안 잡힌 상태입니다. `source ~/.config/qwen-coder/env.sh` 후 재실행.
+- pi 에서 `/model` 에 로컬 모델이 안 보임: 서버가 아직 안 떴거나 `~/.pi/agent/models.json` 의 baseUrl 포트(8080)가 다릅니다. `check.sh` 로 확인.

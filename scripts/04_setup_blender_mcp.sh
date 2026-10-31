@@ -2,24 +2,28 @@
 # Install the Blender MCP addon and register the MCP server with pi.
 source "$(dirname "$0")/common.sh"
 
-have uvx || fail "uv/uvx 가 없습니다 (brew install uv)."
-have pi  || fail "pi 가 없습니다."
+have pi || fail "pi 가 없습니다."
+if [[ "$OFFLINE" == "1" ]]; then
+  addon_cmd=("${BLENDER_MCP_CMD:?BLENDER_MCP_CMD 가 비어 있습니다 (install_offline.sh)}")
+else
+  have uvx || fail "uv/uvx 가 없습니다 (brew install uv)."
+  addon_cmd=(uvx mcp-for-blender)
+fi
 
-info "Blender 애드온 설치 (uvx mcp-for-blender install-addon)"
-uvx mcp-for-blender install-addon || {
-  warn "자동 설치 실패. 수동: uvx mcp-for-blender addon-paths 로 경로 확인 후 Blender Preferences → Add-ons → Install"
+info "Blender 애드온 설치 (${addon_cmd[*]} install-addon)"
+"${addon_cmd[@]}" install-addon || {
+  warn "자동 설치 실패. 수동: ${addon_cmd[*]} addon-paths 로 경로 확인 후 Blender Preferences → Add-ons → Install"
 }
 
 info "pi MCP 등록: blender"
-merge_json "$PI_AGENT_DIR/mcp.json" '{
-  "mcpServers": {
-    "blender": {
-      "command": "uvx",
-      "args": ["mcp-for-blender"],
-      "env": { "DISABLE_TELEMETRY": "true" }
+merge_json "$PI_AGENT_DIR/mcp.json" "{
+  \"mcpServers\": {
+    \"blender\": {
+      $(mcp_cmd_json blender),
+      \"env\": { \"DISABLE_TELEMETRY\": \"true\" }
     }
   }
-}'
+}"
 
 cat <<'EOF'
 
@@ -28,7 +32,7 @@ cat <<'EOF'
   2) 3D 뷰포트에서 N 키 → BlenderMCP 탭 → Connect to MCP server (포트 9876)
      (최신 애드온은 Blender 시작 시 자동으로 서버를 엽니다)
 
-터미널에서 uvx mcp-for-blender 를 직접 실행하지 마세요. pi 가 stdio 로 띄웁니다.
+MCP 서버 명령을 터미널에서 직접 실행하지 마세요. pi 가 stdio 로 띄웁니다.
 pi 에서 확인:  pi mcp list
 EOF
 info "다음: ./scripts/05_setup_orca.sh (orca 오케스트레이터)"

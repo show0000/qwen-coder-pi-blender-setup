@@ -5,3 +5,4 @@ out/
 *.safetensors
 *.gguf
 .DS_Store
+bundle/

@@ -4,14 +4,15 @@
 #   ORCA_API_URL defaults to http://127.0.0.1:13130
 source "$(dirname "$0")/common.sh"
 
-have uvx || fail "uv/uvx 가 없습니다."
-have pi  || fail "pi 가 없습니다."
+have pi || fail "pi 가 없습니다."
+[[ "$OFFLINE" == "1" ]] || have uvx || fail "uv/uvx 가 없습니다."
 
 : "${ORCA_API_TOKEN:?ORCA_API_TOKEN 을 설정하세요. OrcaSlicer → Preferences → Remote API 에서 활성화 후 토큰 복사}"
 ORCA_API_URL="${ORCA_API_URL:-http://127.0.0.1:13130}"
 
 info "pi MCP 등록: orcaslicer ($ORCA_API_URL)"
-patch=$(python3 -c 'import json,os;print(json.dumps({"mcpServers":{"orcaslicer":{"command":"uvx","args":["orcaslicer-mcp"],"env":{"ORCA_API_TOKEN":os.environ["ORCA_API_TOKEN"],"ORCA_API_URL":os.environ["ORCA_API_URL"]}}}}))')
+cmdjson="$(mcp_cmd_json orcaslicer)"
+patch=$(CMDJSON="$cmdjson" ORCA_API_URL="$ORCA_API_URL" python3 -c 'import json,os;c=json.loads("{"+os.environ["CMDJSON"]+"}");c["env"]={"ORCA_API_TOKEN":os.environ["ORCA_API_TOKEN"],"ORCA_API_URL":os.environ["ORCA_API_URL"]};print(json.dumps({"mcpServers":{"orcaslicer":c}}))')
 merge_json "$PI_AGENT_DIR/mcp.json" "$patch"
 
 cat <<EOF

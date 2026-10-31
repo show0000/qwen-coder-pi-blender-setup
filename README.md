@@ -42,6 +42,8 @@ ORCA_API_TOKEN=... ./scripts/07_setup_orcaslicer_mcp.sh
 
 또는 `make all` 로 00~05를 순서대로 실행합니다 (서버는 `make serve`, OrcaSlicer 는 `make orcaslicer`). 각 스크립트는 멱등적이라 다시 실행해도 안전합니다.
 
+방화벽 때문에 대상 Mac 에서 다운로드가 안 되면 docs/OFFLINE.md 를 보세요. 인터넷이 되는 Mac 에서 `scripts/offline/make_bundle.sh` 로 번들을 만들어 USB 로 옮기고 `scripts/offline/install_offline.sh` 로 설치합니다 (Homebrew 없이 `~/.local` 에 설치).
+
 ## 단계별 설명
 
 ### 0. 사전 준비 (00_prereqs.sh)
@@ -210,6 +212,10 @@ cp -r templates/AGENTS.md templates/.pi ~/your-blender-project/
 - 오프라인: `PI_OFFLINE=1 pi` 로 pi.dev 카탈로그 갱신과 버전 체크를 끕니다.
 - 안전: pi는 도구 호출 전에 승인을 묻지 않습니다. 중요한 디렉터리에서는 git으로 작업 상태를 자주 커밋하세요.
 - Blender 버전: bpy API가 버전마다 바뀌므로 AGENTS.md에 사용 중인 Blender 버전을 적어두면 코드 품질이 눈에 띄게 좋아집니다.
+
+## 오프라인 설치
+
+[docs/OFFLINE.md](docs/OFFLINE.md) 참고. 모델 가중치를 제외한 모든 구성요소(Node, pi, uv, Python, MCP 서버 wheel, llama.cpp, jq, orca)를 번들로 만들어 네트워크 없이 설치할 수 있습니다. `--with-model` 로 가중치까지 번들에 포함할 수도 있습니다.
 
 ## 참고 링크
 

@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 S := scripts
 
-.PHONY: all prereqs download serve pi blender orca orcaslicer check
+.PHONY: all prereqs download serve pi blender orca orcaslicer check bundle
 
 all: prereqs download pi blender orca check
 
@@ -13,3 +13,4 @@ blender:  ; $(S)/04_setup_blender_mcp.sh
 orca:     ; $(S)/05_setup_orca.sh
 orcaslicer: ; $(S)/07_setup_orcaslicer_mcp.sh
 check:    ; $(S)/check.sh
+bundle:   ; $(S)/offline/make_bundle.sh ./bundle

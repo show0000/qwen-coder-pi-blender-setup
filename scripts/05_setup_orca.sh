@@ -12,6 +12,7 @@ source "$(dirname "$0")/common.sh"
 have pi || fail "pi 가 없습니다."
 
 if ! have orca; then
+  [[ "$OFFLINE" == "1" ]] && fail "오프라인 모드: 번들에 orca 가 없습니다. make_bundle.sh 를 orca 또는 go 가 있는 머신에서 다시 만드세요."
   info "orca 설치 (brew install orca-cli/tap/orca)"
   brew install orca-cli/tap/orca
 fi

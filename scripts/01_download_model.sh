@@ -4,6 +4,7 @@
 #   BACKEND=mlx            : mlx-community/Qwen3-Coder-Next-6bit (~65GB)
 source "$(dirname "$0")/common.sh"
 
+[[ "$OFFLINE" == "1" ]] && fail "오프라인 모드: 가중치는 USB 등으로 $MODEL_DIR 에 복사하세요 (install_offline.sh <bundle> <model-src>)."
 have hf || fail "hf CLI가 없습니다. 먼저 ./scripts/00_prereqs.sh 를 실행하세요."
 
 mkdir -p "$MODEL_DIR"

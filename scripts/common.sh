@@ -14,6 +14,19 @@ export CTX="${CTX:-131072}"
 export MAX_TOKENS="${MAX_TOKENS:-32768}"
 export PI_AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 export PORT="${PORT:-8080}"
+export OFFLINE="${OFFLINE:-0}"                              # 1 = installed via scripts/offline/, no network tools
+
+# How to launch the MCP servers. Online: uvx fetches on demand. Offline: absolute entry points
+# installed by install_offline.sh (exported from ~/.config/qwen-coder/env.sh).
+mcp_cmd_json() { # mcp_cmd_json <blender|orcaslicer> -> '"command": "...", "args": [...]'
+  local pkg="$1" cmd
+  case "$pkg" in
+    blender)    cmd="${BLENDER_MCP_CMD:-}";    [[ -z "$cmd" && "$OFFLINE" == "0" ]] && { printf '"command": "uvx", "args": ["mcp-for-blender"]'; return; } ;;
+    orcaslicer) cmd="${ORCASLICER_MCP_CMD:-}"; [[ -z "$cmd" && "$OFFLINE" == "0" ]] && { printf '"command": "uvx", "args": ["orcaslicer-mcp"]'; return; } ;;
+  esac
+  [[ -n "$cmd" && -x "$cmd" ]] || { echo "오프라인 모드인데 ${pkg} MCP 실행 파일을 모릅니다 (BLENDER_MCP_CMD / ORCASLICER_MCP_CMD). install_offline.sh 를 다시 실행하세요." >&2; exit 1; }
+  printf '"command": "%s", "args": []' "$cmd"
+}
 
 case "$BACKEND" in
   llama)

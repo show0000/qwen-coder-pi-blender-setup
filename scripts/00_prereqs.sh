@@ -2,6 +2,7 @@
 # Install everything needed on a fresh Apple Silicon Mac. CLI tools only — no GUI model apps.
 source "$(dirname "$0")/common.sh"
 require_macos_arm
+[[ "$OFFLINE" == "1" ]] && fail "오프라인 모드에서는 00_prereqs.sh 대신 scripts/offline/install_offline.sh 를 사용하세요."
 
 # Homebrew
 if ! have brew; then
