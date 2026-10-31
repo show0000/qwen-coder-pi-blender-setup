@@ -7,7 +7,7 @@ all: prereqs download pi blender orca check
 
 prereqs:  ; $(S)/00_prereqs.sh
 download: ; $(S)/01_download_model.sh
-serve:    ; $(S)/02_serve_model.sh
+serve:    ; $(S)/02_serve_model.sh --bg
 pi:       ; $(S)/03_setup_pi.sh
 blender:  ; $(S)/04_setup_blender_mcp.sh
 orca:     ; $(S)/05_setup_orca.sh

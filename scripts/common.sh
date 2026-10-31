@@ -4,21 +4,40 @@
 set -euo pipefail
 
 # --- user-tunable defaults (override via env) -------------------------------
-export HF_REPO="${HF_REPO:-lmstudio-community/Qwen3-Coder-Next-MLX-4bit}"
-export MODEL_ID="${MODEL_ID:-qwen3-coder-next}"             # id used by server + pi
-export LMSTUDIO_MODELS_DIR="${LMSTUDIO_MODELS_DIR:-$HOME/.lmstudio/models}"
-export MODEL_DIR="${MODEL_DIR:-$LMSTUDIO_MODELS_DIR/$HF_REPO}"
-export BACKEND="${BACKEND:-lmstudio}"                      # lmstudio | mlx
+# Backend: both are plain CLI tools, no GUI app.
+#   llama  (default) : llama.cpp llama-server (brew), GGUF weights, pi-supported, robust tool-call parsing
+#   mlx              : mlx-lm server (uv tool), MLX safetensors weights
+export BACKEND="${BACKEND:-llama}"
+export MODEL_ID="${MODEL_ID:-qwen3-coder-next}"             # id used by server alias + pi
+export MODELS_ROOT="${MODELS_ROOT:-$HOME/models}"
 export CTX="${CTX:-131072}"
 export MAX_TOKENS="${MAX_TOKENS:-32768}"
 export PI_AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+export PORT="${PORT:-8080}"
 
 case "$BACKEND" in
-  lmstudio) export PORT="${PORT:-1234}" ;;
-  mlx)      export PORT="${PORT:-8080}" ;;
-  *) echo "BACKEND must be lmstudio or mlx (got: $BACKEND)" >&2; exit 1 ;;
+  llama)
+    export HF_REPO="${HF_REPO:-unsloth/Qwen3-Coder-Next-GGUF}"
+    export QUANT="${QUANT:-UD-Q4_K_XL}"                      # ~46GB. UD-Q5_K_XL / Q6_K / Q8_0 also fit in 128GB
+    ;;
+  mlx)
+    export HF_REPO="${HF_REPO:-mlx-community/Qwen3-Coder-Next-4bit}"
+    export QUANT=""
+    ;;
+  *) echo "BACKEND must be llama or mlx (got: $BACKEND)" >&2; exit 1 ;;
 esac
+export MODEL_DIR="${MODEL_DIR:-$MODELS_ROOT/$HF_REPO}"
 export BASE_URL="http://127.0.0.1:${PORT}/v1"
+export SERVER_LOG="${SERVER_LOG:-$HOME/.local/state/qwen-coder/server.log}"
+export SERVER_PID="${SERVER_PID:-$HOME/.local/state/qwen-coder/server.pid}"
+
+# first GGUF shard for the chosen quant (unsloth stores big quants in a subfolder, split into -00001-of-N)
+gguf_main_file() {
+  local f
+  f=$(find "$MODEL_DIR" -type f -name "*${QUANT}*00001-of-*.gguf" 2>/dev/null | head -1)
+  [[ -n "$f" ]] || f=$(find "$MODEL_DIR" -type f -name "*${QUANT}*.gguf" 2>/dev/null | head -1)
+  printf '%s' "$f"
+}
 
 # --- output helpers ---------------------------------------------------------
 c_green=$'\033[32m'; c_yellow=$'\033[33m'; c_red=$'\033[31m'; c_reset=$'\033[0m'
@@ -33,7 +52,7 @@ require_macos_arm() {
 }
 
 # Make Homebrew + uv tool bins visible in this shell
-export PATH="/opt/homebrew/bin:$HOME/.local/bin:$HOME/.lmstudio/bin:$HOME/.pi/bin:$PATH"
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:$HOME/.pi/bin:$PATH"
 
 # merge_json <target-file> <python-expr-producing-dict> : deep-merge into JSON file
 merge_json() {

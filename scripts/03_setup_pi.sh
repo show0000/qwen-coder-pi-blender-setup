@@ -15,11 +15,11 @@ patch=$(cat <<JSON
       "models": [
         {
           "id": "$MODEL_ID",
-          "name": "Qwen3-Coder-Next 80B-A3B (MLX 4bit, $BACKEND)",
+          "name": "Qwen3-Coder-Next 80B-A3B (local, $BACKEND)",
           "contextWindow": $CTX,
           "maxTokens": $MAX_TOKENS,
           "input": ["text"],
-          "samplingParams": { "temperature": 0.7, "top_p": 0.8, "top_k": 20 }
+          "samplingParams": { "temperature": 1.0, "top_p": 0.95, "top_k": 40, "min_p": 0.01 }
         }
       ]
     }

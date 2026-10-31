@@ -20,7 +20,7 @@ if models=$(curl -fsS --max-time 3 "$BASE_URL/models" 2>/dev/null); then
      | jq -e '.choices[0].message.content' >/dev/null 2>&1; then
     ok "chat/completions 동작"
   else
-    bad "chat/completions 실패 (모델 로드 여부: lms ps)"
+    bad "chat/completions 실패 (로그: $SERVER_LOG)"
   fi
 else
   bad "서버 응답 없음 → ./scripts/02_serve_model.sh"
