@@ -86,7 +86,8 @@ fi
 
 # ---- 7. this repo + manifest --------------------------------------------------
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-rsync -a --delete --exclude .git --exclude bundle --exclude '*.gguf' "$REPO_ROOT/" "$B/repo/"
+rm -rf "$B/repo"; mkdir -p "$B/repo"
+tar -C "$REPO_ROOT" --exclude .git --exclude bundle --exclude '*.gguf' -cf - . | tar -C "$B/repo" -xf -
 cat > "$B/manifest.env" <<EOF
 BUNDLE_CREATED="$(date -u +%FT%TZ)"
 NODE_VERSION="$NODE_VERSION"
@@ -113,8 +114,10 @@ fi
 tar -C "$B" -czf "$B/python.tgz" python && rm -rf "$B/python"
 rm -rf "$NODE_TMP" "$VENV"
 info "번들 완료: $B  ($(du -sh "$B" | cut -f1))"
-info "USB 가 exFAT/FAT32 라면 폴더째 복사해도 되지만, 가장 안전한 방법은 한 파일로 묶는 것입니다:"
-info "  tar -C \"$(dirname "$B")\" -czf \"$(dirname "$B")/$(basename "$B").tgz\" \"$(basename "$B")\""
+if [[ "${NO_TGZ:-0}" != "1" ]]; then
+  info "한 파일로 묶는 중: $(dirname "$B")/$(basename "$B").tgz  (USB/HTTP 전송용)"
+  tar -C "$(dirname "$B")" -czf "$(dirname "$B")/$(basename "$B").tgz" "$(basename "$B")"
+fi
 cat <<EOF
 
 대상(오프라인) Mac 에서:

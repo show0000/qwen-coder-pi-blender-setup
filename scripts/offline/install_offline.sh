@@ -46,7 +46,7 @@ cp "$B/bin/uv" "$B/bin/uvx" "$BIN/"; chmod +x "$BIN/uv" "$BIN/uvx"; unq "$BIN/uv
 if [[ -f "$B/python.tgz" ]]; then
   tar -xzf "$B/python.tgz" -C "$HOME/.local/share/uv"          # extracts python/ (symlinks restored)
 else
-  rsync -a "$B/python/" "$HOME/.local/share/uv/python/"        # older bundles: plain directory
+  cp -R "$B/python/." "$HOME/.local/share/uv/python/"           # older bundles: plain directory
 fi
 unq "$HOME/.local/share/uv/python"
 export UV_PYTHON_DOWNLOADS=never UV_OFFLINE=1 UV_NO_INDEX=1 UV_FIND_LINKS="$B/wheels"
@@ -96,7 +96,14 @@ source "$ENVF"; export BLENDER_MCP_CMD ORCASLICER_MCP_CMD
 if [[ -z "$MODEL_SRC" && -d "$B/models/$HF_REPO" ]]; then MODEL_SRC="$B/models/$HF_REPO"; fi
 if [[ -n "$MODEL_SRC" ]]; then
   info "모델 복사: $MODEL_SRC → $MODEL_DIR  (수십 GB, 시간이 걸립니다)"
-  mkdir -p "$MODEL_DIR"; rsync -ah --progress "$MODEL_SRC/" "$MODEL_DIR/"
+  mkdir -p "$MODEL_DIR"
+  if command -v rsync >/dev/null 2>&1; then
+    rsync -ah --progress "$MODEL_SRC/" "$MODEL_DIR/"
+  elif [[ "$MODEL_SRC" == *:* ]]; then
+    fail "rsync 가 없어 원격 경로를 복사할 수 없습니다. 온라인 Mac 에서 'python3 -m http.server' 를 띄우고 curl -C - 로 $MODEL_DIR 에 직접 받으세요 (docs/OFFLINE.md)."
+  else
+    cp -v "$MODEL_SRC"/*.gguf "$MODEL_DIR/" 2>/dev/null || cp -Rv "$MODEL_SRC"/. "$MODEL_DIR/"
+  fi
 else
   warn "모델 소스가 지정되지 않았습니다. 나중에 가중치를 $MODEL_DIR 에 넣으세요."
 fi
