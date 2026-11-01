@@ -54,13 +54,16 @@ if [[ "$WITH_NVIM" == "1" ]]; then
 fi
 
 info "4/4 묶는 중"
-date -u +%FT%TZ > "$W/VERSION"; (cd "$REPO_ROOT" && git rev-parse --short HEAD 2>/dev/null || echo nogit) >> "$W/VERSION"
-tar -C "$OUT" -czf "$OUT/update.tgz" update && rm -rf "$W"
-info "완료: $OUT/update.tgz ($(du -sh "$OUT/update.tgz" | cut -f1))"
+STAMP=$(date -u +%Y%m%dT%H%M%SZ); HASH=$(cd "$REPO_ROOT" && git rev-parse --short HEAD 2>/dev/null || echo nogit)
+printf '%s\n%s\n' "$STAMP" "$HASH" > "$W/VERSION"
+NAME="update-${STAMP}-${HASH}.tgz"
+tar -C "$OUT" -czf "$OUT/$NAME" update && rm -rf "$W"
+ln -sf "$NAME" "$OUT/update.tgz"
+info "완료: $OUT/$NAME ($(du -sh "$OUT/$NAME" | cut -f1))  sha1=$(shasum "$OUT/$NAME" | cut -c1-12)"
 cat <<EOF
 
 HTTP 로 넘기기:   cd "$OUT" && python3 -m http.server 8000
-오프라인 Mac:     rm -rf ~/update ~/update.tgz && curl -o ~/update.tgz http://<이 Mac IP>:8000/update.tgz
-                  tar -xzf ~/update.tgz -C ~ && ~/update/repo/scripts/offline/apply_update.sh ~/update
-                  (curl -C - 는 쓰지 마세요: 옛 update.tgz 가 있으면 새 파일을 받지 않습니다)
+오프라인 Mac:     rm -rf ~/update && curl --noproxy '*' -o ~/$NAME http://<이 Mac IP>:8000/$NAME
+                  tar -xzf ~/$NAME -C ~ && ~/update/repo/scripts/offline/apply_update.sh ~/update
+  (파일 이름에 시각과 커밋이 들어가므로 프록시 캐시나 옛 파일과 섞일 일이 없습니다)
 EOF
