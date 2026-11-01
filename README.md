@@ -222,6 +222,7 @@ qwen vision start|stop|status   # 비전 모델 서버 (06 설치 시)
 ```bash
 ./scripts/08_setup_pi_config.sh          # 복사 (기존 AGENTS.md 는 백업)
 ./scripts/08_setup_pi_config.sh --link   # 심볼릭 링크: git pull 만으로 갱신
+./scripts/08_setup_pi_config.sh --with-claude-skills   # ~/.claude/skills 의 스킬도 pi 에서 로드
 ```
 
 | 항목 | 내용 |
@@ -231,6 +232,7 @@ qwen vision start|stop|status   # 비전 모델 서버 (06 설치 시)
 | skills/bpy-modeling | 이미지 없이 bpy 로 모델링: 멱등 함수, data API 우선, dimensions/정점수/manifold 검사로 수치 검증, 3.x/4.x API 차이 |
 | skills/print-pipeline | Blender 내보내기 → OrcaSlicer 로드/배치/슬라이스/경고 확인 → 시간·필라멘트 보고 순서 |
 | skills/debug-loop | 실패 테스트 하나만 재현, 트레이스백 아래부터, 가설 하나, 최소 수정, 2회 실패 시 중단 |
+| skills/karpathy-guidelines | forrestchang/andrej-karpathy-skills (MIT) 원문. 핵심 4원칙은 AGENTS.md 에도 요약돼 항상 적용 |
 | prompts/ | `/review` (uncommitted diff 만 리뷰), `/plan <task>` (구현 전 12줄 계획) |
 | settings | compaction keepRecentTokens 24000, 기본 도구에 grep/find/ls 추가 |
 
