@@ -35,3 +35,4 @@ You run on a local model. Tokens are not free: long context slows every turn and
 
 ## Skills
 Read the matching SKILL.md before starting: `repo-map` (unfamiliar codebase), `bpy-modeling` (Blender), `print-pipeline` (STL/3MF → OrcaSlicer), `debug-loop` (failing tests or tracebacks), `karpathy-guidelines` (full behavioral guidelines).
+Optional process skills (if installed) are invoked by the user with `/skill:test-driven-development`, `/skill:systematic-debugging`, `/skill:verification-before-completion`, `/skill:brainstorming`, `/skill:writing-plans`; follow them when invoked, doing any "subagent" steps yourself in sequence.

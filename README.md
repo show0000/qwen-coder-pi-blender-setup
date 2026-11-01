@@ -223,6 +223,7 @@ qwen vision start|stop|status   # 비전 모델 서버 (06 설치 시)
 ./scripts/08_setup_pi_config.sh          # 복사 (기존 AGENTS.md 는 백업)
 ./scripts/08_setup_pi_config.sh --link   # 심볼릭 링크: git pull 만으로 갱신
 ./scripts/08_setup_pi_config.sh --with-claude-skills   # ~/.claude/skills 의 스킬도 pi 에서 로드
+./scripts/08_setup_pi_config.sh --with-superpowers     # obra/superpowers 중 pi 에서 동작하는 8개 (슬래시 호출 전용)
 ```
 
 | 항목 | 내용 |
@@ -233,6 +234,7 @@ qwen vision start|stop|status   # 비전 모델 서버 (06 설치 시)
 | skills/print-pipeline | Blender 내보내기 → OrcaSlicer 로드/배치/슬라이스/경고 확인 → 시간·필라멘트 보고 순서 |
 | skills/debug-loop | 실패 테스트 하나만 재현, 트레이스백 아래부터, 가설 하나, 최소 수정, 2회 실패 시 중단 |
 | skills/karpathy-guidelines | forrestchang/andrej-karpathy-skills (MIT) 원문. 핵심 4원칙은 AGENTS.md 에도 요약돼 항상 적용 |
+| skills-optional/superpowers | obra/superpowers (MIT) 중 서브에이전트/훅에 의존하지 않는 8개: TDD, systematic-debugging, verification-before-completion, brainstorming, writing-plans 등. `disable-model-invocation` 이라 평소 비용 0, `/skill:이름` 으로만 호출 |
 | prompts/ | `/review` (uncommitted diff 만 리뷰), `/plan <task>` (구현 전 12줄 계획) |
 | settings | compaction keepRecentTokens 24000, 기본 도구에 grep/find/ls 추가 |
 
