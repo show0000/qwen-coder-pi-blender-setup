@@ -60,6 +60,7 @@ info "완료: $OUT/update.tgz ($(du -sh "$OUT/update.tgz" | cut -f1))"
 cat <<EOF
 
 HTTP 로 넘기기:   cd "$OUT" && python3 -m http.server 8000
-오프라인 Mac:     curl -C - -o ~/update.tgz http://<이 Mac IP>:8000/update.tgz
+오프라인 Mac:     rm -rf ~/update ~/update.tgz && curl -o ~/update.tgz http://<이 Mac IP>:8000/update.tgz
                   tar -xzf ~/update.tgz -C ~ && ~/update/repo/scripts/offline/apply_update.sh ~/update
+                  (curl -C - 는 쓰지 마세요: 옛 update.tgz 가 있으면 새 파일을 받지 않습니다)
 EOF

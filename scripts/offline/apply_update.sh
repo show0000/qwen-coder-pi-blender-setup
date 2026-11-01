@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # OFFLINE Mac: apply an update.tgz made by make_update.sh. Safe to re-run.
+#   rm -rf ~/update ~/update.tgz && curl -o ~/update.tgz http://<ip>:8000/update.tgz   (no -C -: a stale file would block the new one)
 #   tar -xzf ~/update.tgz -C ~ && ~/update/repo/scripts/offline/apply_update.sh ~/update
 #   QWEN_REPO=~/Dev/Lab/qwen-coder-pi-blender-setup ...   # scripts live somewhere other than ~/qwen-coder-pi-blender-setup
 set -euo pipefail

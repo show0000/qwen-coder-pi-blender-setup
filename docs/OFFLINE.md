@@ -117,7 +117,7 @@ for i in 1 2 3; do f="Qwen3-Coder-Next-UD-Q6_K_XL-0000${i}-of-00003.gguf"; curl 
 cd ~/Downloads && python3 -m http.server 8000
 
 # 오프라인 Mac
-curl -C - -o ~/update.tgz http://<온라인 Mac IP>:8000/update.tgz
+rm -rf ~/update ~/update.tgz && curl -o ~/update.tgz http://<온라인 Mac IP>:8000/update.tgz   # -C - 금지: 같은 이름의 옛 파일이 있으면 새 파일을 안 받음
 tar -xzf ~/update.tgz -C ~ && ~/update/repo/scripts/offline/apply_update.sh ~/update
 # 스크립트를 다른 위치에 두고 있으면:  QWEN_REPO=~/Dev/Lab/qwen-coder-pi-blender-setup ~/update/repo/scripts/offline/apply_update.sh ~/update
 ```
