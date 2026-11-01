@@ -184,6 +184,23 @@ ORCA_API_TOKEN=<복사한 토큰> ./scripts/07_setup_orcaslicer_mcp.sh
 Blender에서 STL/3MF를 내보낸 뒤 OrcaSlicer MCP의 `load_model` → `arrange_plate` → `slice_and_wait` 로 이어지는
 모델링 → 슬라이싱 파이프라인을 pi 한 세션에서 돌릴 수 있습니다.
 
+## 일상 사용: qwen 명령
+
+03_setup_pi.sh(또는 install_offline.sh)가 `~/.local/bin/qwen` 을 설치합니다.
+
+```bash
+qwen start            # llama-server 백그라운드 기동 (이미 떠 있으면 아무것도 안 함)
+qwen status           # 프로세스/API/모델/메모리 상태
+qwen logs             # 서버 로그 follow
+qwen pi               # 현재 디렉터리에서 pi 를 로컬 모델로 실행. 서버가 꺼져 있으면 먼저 띄움
+qwen pi -p "요약해줘"   # pi 인자는 그대로 전달
+qwen restart
+qwen stop             # 서버 종료, 메모리 반환
+qwen check            # check.sh
+```
+
+68GB 가 메모리에 상주하므로 Blender/UE5 작업을 길게 할 때는 `qwen stop` 으로 내려두는 편이 좋습니다.
+
 ## 프로젝트별 설정
 
 `templates/` 아래 파일을 프로젝트 루트에 복사하면 됩니다.

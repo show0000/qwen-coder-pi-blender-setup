@@ -16,7 +16,11 @@ MODEL_SRC="${2:-}"
 source "$B/manifest.env"
 
 export OFFLINE=1
-REPO="$B/repo"
+# keep a stable copy of the scripts outside the bundle so `qwen` keeps working after the bundle is deleted
+REPO="$HOME/qwen-coder-pi-blender-setup"
+if [[ "$(cd "$B/repo" && pwd)" != "$REPO" ]]; then
+  mkdir -p "$REPO"; tar -C "$B/repo" -cf - . | tar -C "$REPO" -xf -
+fi
 source "$REPO/scripts/common.sh"
 require_macos_arm
 xcode-select -p >/dev/null 2>&1 || warn "Xcode Command Line Tools 가 없습니다 (git 필요). 'xcode-select --install' 은 오프라인에서 불가하니 설치 패키지를 따로 준비하세요."
@@ -115,9 +119,12 @@ command -v orca >/dev/null 2>&1 && "$REPO/scripts/05_setup_orca.sh" || true
 
 cat <<EOF
 
-설치 완료. 새 터미널을 열거나  source $ENVF  한 뒤:
-  $REPO/scripts/02_serve_model.sh --bg     # 모델 서버
-  $REPO/scripts/check.sh                   # 점검
-  cd ~/your-project && pi --model local/$MODEL_ID
+설치 완료. 스크립트는 $REPO 에 복사되었고 번들 폴더는 지워도 됩니다.
+새 터미널을 열거나  source $ENVF  한 뒤:
+  qwen start      # 모델 서버 (백그라운드)
+  qwen status     # 상태
+  qwen check      # 전체 점검
+  cd ~/your-project && qwen pi     # 로컬 모델로 pi 실행 (서버가 꺼져 있으면 자동 시작)
+  qwen stop       # 서버 종료
 OrcaSlicer 를 쓰면:  ORCA_API_TOKEN=... $REPO/scripts/07_setup_orcaslicer_mcp.sh
 EOF
