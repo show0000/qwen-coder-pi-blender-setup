@@ -55,13 +55,16 @@ cat > "$HOME/.local/bin/pi-vision" <<EOF
 exec pi --model "local-vision/$VISION_MODEL_ID" "\$@"
 EOF
 chmod +x "$HOME/.local/bin/pi-vision"
+# vision-describe: lets the text-only coder query the VLM about an image file (no model switch)
+ln -sf "$(cd "$(dirname "$0")" && pwd)/vision-describe.sh" "$HOME/.local/bin/vision-describe"
 
 cat <<EOF2
 
 등록 완료. 사용법:
   qwen vision start              # 두 번째 서버 (port $VISION_PORT, 약 21GB 추가 상주)
-  pi 안에서 /model → "$VISION_MODEL_ID" 선택 (또는 Ctrl+P 로 순환)
-  → get_viewport_screenshot 결과를 모델이 직접 봅니다. 확인이 끝나면 /model 로 coder 로 복귀.
+  권장: coder 는 그대로 두고 도구로 호출 (모델 전환 없음 → 컨텍스트 요약 안 일어남)
+    vision-describe out/view.png "구멍이 윗면에 있나? 치수 비율은?"
+  대안: pi 안에서 /model → "$VISION_MODEL_ID" (세션이 32K 를 넘었으면 요약이 발생하니 주의)
   qwen vision stop
 
 Orca 에서: agent launch --agent pi --model local-vision/$VISION_MODEL_ID

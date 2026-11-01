@@ -5,7 +5,7 @@ description: Blender modeling and scene work through the blender MCP server (bpy
 
 # bpy-modeling
 
-The model cannot see images unless the vision model is active. Verify with numbers, not screenshots.
+The coder model cannot see images. Verify with numbers first; for shape/placement questions ask the local VLM via `vision-describe` (see below) instead of switching models.
 
 ## Session start (once)
 1. `get_scene_info` → note Blender version, unit scale, object names, active collection. Do not call it again unless the user changed the scene outside your control.
@@ -25,7 +25,20 @@ The model cannot see images unless the vision model is active. Verify with numbe
   import bmesh; bm = bmesh.new(); bm.from_mesh(obj.data)
   nm = [e for e in bm.edges if not e.is_manifold]; print("non_manifold_edges", len(nm)); bm.free()
   ```
-- Only call `get_viewport_screenshot` when the vision model is active (user switched with /model) or the user asked for an image.
+- Visual check without switching models: save a viewport image from Blender, then ask the local VLM from bash. Do this after any change whose correctness is about placement or shape (holes on the right face, parts touching, orientation):
+  ```python
+  # inside execute_blender_code — save the 3D viewport (or a quick render) to the project
+  import bpy, os; os.makedirs("out", exist_ok=True)
+  bpy.context.scene.render.filepath = os.path.abspath("out/view.png")
+  bpy.context.scene.render.resolution_x = 1280; bpy.context.scene.render.resolution_y = 720
+  bpy.ops.render.opengl(write_still=True)   # viewport-style render, fast
+  print(os.path.abspath("out/view.png"))
+  ```
+  ```bash
+  vision-describe out/view.png "Is the 6 mm hole on the TOP face, centered? Do the two parts overlap? Report proportions."
+  ```
+  `vision-describe` prints a short text answer (it needs `qwen vision start`; `vision-describe --check` tells you). Treat the answer as a second opinion: confirm numerically with get_object_info before acting on it.
+- Do not call `get_viewport_screenshot` (it injects an image you cannot see); use the vision-describe flow above. Only when the user has switched pi to the vision model themselves does get_viewport_screenshot make sense.
 
 ## Export
 - STL for printing: apply scale, triangulate is automatic. 3MF keeps units and multiple objects. GLB for UE5/web.
