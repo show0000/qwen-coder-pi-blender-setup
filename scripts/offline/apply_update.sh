@@ -61,6 +61,25 @@ step 6/7 "pi 설정: models.json(ctx), qwen 명령, 스킬, 비전 provider"
 "$REPO/scripts/08_setup_pi_config.sh" --with-superpowers | grep -E 'superpowers|설치됨' | sed 's/^/  /'
 if [[ -n "$(vision_gguf)" && -n "$(vision_mmproj)" ]]; then "$REPO/scripts/06_setup_vision.sh" >/dev/null && echo "  ok: local-vision provider"; fi
 
+step 6a/7 "Neovim (번들에 있으면)"
+if [[ -f "$U/nvim/manifest.env" ]]; then
+  # shellcheck disable=SC1091
+  source "$U/nvim/manifest.env"
+  rm -rf "$OPT/nvim"; mkdir -p "$OPT/nvim"; tar -xzf "$U/nvim/nvim-macos-arm64.tar.gz" -C "$OPT/nvim" --strip-components 1; unq "$OPT/nvim"
+  ln -sf "$OPT/nvim/bin/nvim" "$BIN/nvim"
+  CFG="${XDG_CONFIG_HOME:-$HOME/.config}"; DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
+  if [[ -d "$CFG/nvim" && ! -L "$CFG/nvim" ]]; then mv "$CFG/nvim" "$CFG/nvim.bak.$(date +%Y%m%d%H%M%S)"; echo "  기존 ~/.config/nvim 백업"; fi
+  mkdir -p "$CFG" "$DATA"; tar -xzf "$U/nvim/nvim-config.tgz" -C "$CFG"
+  rm -rf "$DATA/nvim"; tar -xzf "$U/nvim/nvim-data.tgz" -C "$DATA"; unq "$DATA/nvim"
+  [[ -f "$U/nvim/nvim-state.tgz" ]] && { mkdir -p "$HOME/.local/state"; tar -xzf "$U/nvim/nvim-state.tgz" -C "$HOME/.local/state" 2>/dev/null || true; }
+  for b in "$U"/nvim/bin/*; do [[ -f "$b" ]] && { cp "$b" "$BIN/"; chmod +x "$BIN/$(basename "$b")"; unq "$BIN/$(basename "$b")"; }; done
+  # keep lazy.nvim quiet offline
+  grep -q 'QWEN_BASE_URL' "$ENVF" || echo "export QWEN_BASE_URL=\"http://127.0.0.1:${PORT:-8080}\" QWEN_MODEL_ID=\"${MODEL_ID:-qwen3-coder-next}\"" >> "$ENVF"
+  echo "  ok: nvim v$NVIM_VERSION → $BIN/nvim, config/data 복원, 도구: $(ls "$U/nvim/bin" 2>/dev/null | tr '\n' ' ')"
+  [[ -s "$U/nvim/EXTERNAL_TOOLS.txt" ]] && echo "  설정이 참조하는 외부 도구(이 Mac 에 있는지 확인): $(cat "$U/nvim/EXTERNAL_TOOLS.txt")"
+  echo "  첫 실행 후 :checkhealth 로 확인. lazy.nvim 업데이트 체크가 켜져 있으면 네트워크 오류가 뜰 수 있음 → checker.enabled=false"
+else echo "  (번들에 없음, 건너뜀)"; fi
+
 step 6b/7 "orca MCP 등록"
 if command -v orca >/dev/null 2>&1; then "$REPO/scripts/05_setup_orca.sh" >/dev/null 2>&1 && echo "  ok: mcp.json orca, ~/.local/bin/pi-local"; else echo "  (orca 없음, 건너뜀)"; fi
 

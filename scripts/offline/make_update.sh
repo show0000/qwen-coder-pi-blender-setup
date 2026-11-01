@@ -6,11 +6,12 @@
 #
 #   ./scripts/offline/make_update.sh [out-dir]      (default ~/Downloads)  -> <out-dir>/update.tgz
 #   ./scripts/offline/make_update.sh --with-vision
+#   ./scripts/offline/make_update.sh --with-nvim [--with-ai]   # snapshot this Mac's Neovim (+ local-AI plugins)
 set -euo pipefail
 source "$(dirname "$0")/../common.sh"
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-OUT="$HOME/Downloads"; WITH_VISION=0
-for a in "$@"; do case "$a" in --with-vision) WITH_VISION=1 ;; *) OUT="$a" ;; esac; done
+OUT="$HOME/Downloads"; WITH_VISION=0; WITH_NVIM=0; WITH_AI=""
+for a in "$@"; do case "$a" in --with-vision) WITH_VISION=1 ;; --with-nvim) WITH_NVIM=1 ;; --with-ai) WITH_AI="--with-ai" ;; *) OUT="$a" ;; esac; done
 mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
 W="$OUT/update"; rm -rf "$W"; mkdir -p "$W"/{repo,wheels,npm}
 
@@ -45,6 +46,11 @@ if [[ "$WITH_VISION" == "1" ]]; then
   for f in "Qwen3.8-27B-${VISION_QUANT}.gguf" "$VISION_MMPROJ"; do
     curl -fL -C - --retry 20 --progress-bar -o "$W/models/vision/$f" "$B/$f"
   done
+fi
+
+if [[ "$WITH_NVIM" == "1" ]]; then
+  info "3c/4 Neovim 스냅샷"
+  "$(dirname "$0")/make_nvim_bundle.sh" "$W" $WITH_AI
 fi
 
 info "4/4 묶는 중"

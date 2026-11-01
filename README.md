@@ -237,6 +237,18 @@ vi ~/.config/qwen-coder/enterprise.env    # URL, 토큰, 필터 입력 (chmod 60
 
 기본값은 읽기 전용(`READ_ONLY_MODE=true`, `GITLAB_PERMISSION_MODE=readonly`)입니다. 두 서버 합쳐 도구가 100개 가까이 되므로 `ENABLED_TOOLS`, `JIRA_PROJECTS_FILTER`, `GITLAB_TOOLSETS=core` 로 범위를 좁히는 것이 로컬 모델의 도구 선택 정확도에 중요합니다. 스크립트가 pi 의 `tool_search` 와 `codemode` 를 켜서 도구 설명이 매 턴 프롬프트에 전부 올라가지 않게 합니다. 자체 서명 인증서면 `JIRA_SSL_VERIFY=false` 또는 `NODE_EXTRA_CA_CERTS=<사내 CA PEM>` 을 설정하세요.
 
+## Neovim 연동 (선택)
+
+지금 쓰는 Neovim 구성을 그대로 오프라인 Mac 에 옮기고, 원하면 로컬 qwen 연동 플러그인을 얹습니다.
+
+```bash
+# 온라인 Mac: 현재 nvim(버전 일치 공식 릴리스) + ~/.config/nvim + ~/.local/share/nvim(플러그인/Mason/파서) + rg/fd 스냅샷
+./scripts/offline/make_update.sh --with-nvim            # 설정 그대로
+./scripts/offline/make_update.sh --with-nvim --with-ai  # + lua/plugins/local-ai.lua 추가 후 Lazy sync
+```
+
+`config/nvim/local-ai.lua` (lazy.nvim 스펙): minuet-ai 인라인 완성(:8080 FIM), codecompanion 채팅/인라인 편집(`<leader>ac`, `<leader>ae`), toggleterm 으로 pi 분할 실행(`<leader>ap`). 모두 로컬 서버만 사용합니다. 오프라인 Mac 에서는 apply_update 가 `~/.local/opt/nvim` 에 설치하고 기존 `~/.config/nvim` 은 백업 후 교체합니다.
+
 ## 컨텍스트 절약형 작업 규칙과 스킬 (08_setup_pi_config.sh)
 
 로컬 모델은 컨텍스트를 채울수록 느려지고 정확도가 떨어지므로, "필요한 것만 읽고 짧게 보고하는" 규칙을 pi 전역에 깔아 둡니다. `pi-config/` 의 내용을 `~/.pi/agent/` 에 설치합니다.
