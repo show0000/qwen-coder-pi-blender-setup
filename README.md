@@ -9,7 +9,9 @@ GUI 모델 앱(LM Studio, Ollama)은 쓰지 않습니다. 전부 brew / uv tool 
             │                          └─ Qwen3-Coder-Next GGUF UD-Q6_K_XL (~68GB, 262K ctx)
             ├─ MCP: blender    ──▶ uvx mcp-for-blender  ──▶ Blender addon (port 9876)
             ├─ MCP: orca       ──▶ orca mcp serve       ──▶ 워크트리/run 상태 (~/.orca/orca.db)
-            └─ MCP: orcaslicer ──▶ uvx orcaslicer-mcp   ──▶ OrcaSlicer Remote API (선택)
+            ├─ MCP: orcaslicer ──▶ uvx orcaslicer-mcp   ──▶ OrcaSlicer Remote API (선택)
+            ├─ MCP: atlassian  ──▶ mcp-atlassian        ──▶ 사내 Jira / Confluence (PAT)
+            └─ MCP: gitlab     ──▶ @zereight/mcp-gitlab ──▶ 사내 GitLab (PAT)
 orca ── run 마다 git worktree 생성 ──▶ pi-local "<task>" (비대화형 pi, 같은 로컬 모델)
 ```
 
@@ -214,6 +216,23 @@ qwen vision start|stop|status   # 비전 모델 서버 (06 설치 시)
 ```
 
 68GB 가 메모리에 상주하므로 Blender/UE5 작업을 길게 할 때는 `qwen stop` 으로 내려두는 편이 좋습니다.
+
+### 9. 사내 Jira / Confluence / GitLab MCP (09_setup_enterprise_mcp.sh)
+
+| 대상 | 서버 | 인증 |
+|---|---|---|
+| Jira + Confluence (Server/Data Center) | mcp-atlassian (PyPI) | Personal Access Token (`JIRA_PERSONAL_TOKEN`, `CONFLUENCE_PERSONAL_TOKEN`) |
+| GitLab (self-hosted) | @zereight/mcp-gitlab (npm) | Personal Access Token, `GITLAB_API_URL=https://gitlab.../api/v4` |
+
+```bash
+./scripts/09_setup_enterprise_mcp.sh      # 1회차: ~/.config/qwen-coder/enterprise.env 템플릿 생성
+vi ~/.config/qwen-coder/enterprise.env    # URL, 토큰, 필터 입력 (chmod 600)
+./scripts/09_setup_enterprise_mcp.sh      # 2회차: 래퍼 생성 + pi 등록
+```
+
+토큰은 enterprise.env 에만 있고, `~/.local/bin/atlassian-mcp`, `~/.local/bin/gitlab-mcp` 래퍼가 실행 시점에 읽어 환경변수로 넘깁니다. mcp.json 에는 래퍼 경로만 기록됩니다. 오프라인 번들에는 두 서버가 기본 포함됩니다.
+
+기본값은 읽기 전용(`READ_ONLY_MODE=true`, `GITLAB_PERMISSION_MODE=readonly`)입니다. 두 서버 합쳐 도구가 100개 가까이 되므로 `ENABLED_TOOLS`, `JIRA_PROJECTS_FILTER`, `GITLAB_TOOLSETS=core` 로 범위를 좁히는 것이 로컬 모델의 도구 선택 정확도에 중요합니다. 스크립트가 pi 의 `tool_search` 와 `codemode` 를 켜서 도구 설명이 매 턴 프롬프트에 전부 올라가지 않게 합니다. 자체 서명 인증서면 `JIRA_SSL_VERIFY=false` 또는 `NODE_EXTRA_CA_CERTS=<사내 CA PEM>` 을 설정하세요.
 
 ## 컨텍스트 절약형 작업 규칙과 스킬 (08_setup_pi_config.sh)
 

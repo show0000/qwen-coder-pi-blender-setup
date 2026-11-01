@@ -42,6 +42,13 @@ PI_VERSION=$("$B/pi/prefix/bin/pi" --version 2>/dev/null || echo unknown)
 tar -C "$B/pi" -czf "$B/pi/pi-prefix.tgz" prefix && rm -rf "$B/pi/prefix"
 info "pi $PI_VERSION"
 
+# ---- 2b. GitLab MCP (npm) as a relocatable prefix --------------------------------
+info "mcp-gitlab (npm prefix) 설치"
+rm -rf "$B/pi/gl-prefix"; mkdir -p "$B/pi/gl-prefix"
+npm_config_prefix="$B/pi/gl-prefix" npm install -g --ignore-scripts --no-fund --no-audit @zereight/mcp-gitlab >/dev/null \
+  && tar -C "$B/pi" -czf "$B/pi/mcp-gitlab-prefix.tgz" gl-prefix || warn "mcp-gitlab 설치 실패 (선택 항목)"
+rm -rf "$B/pi/gl-prefix"
+
 # ---- 3. uv + managed Python --------------------------------------------------
 UV_TGZ="uv-aarch64-apple-darwin.tar.gz"
 [[ -f "$B/bin/$UV_TGZ" ]] || dl "https://github.com/astral-sh/uv/releases/latest/download/$UV_TGZ" "$B/bin/$UV_TGZ"
@@ -58,7 +65,7 @@ info "wheelhouse 작성 (mcp-for-blender, orcaslicer-mcp, huggingface_hub)"
 VENV="$B/.venv"; rm -rf "$VENV"
 UV_PYTHON_INSTALL_DIR="$B/python" "$B/bin/uv" venv -q --python "$PY_BIN" "$VENV"
 UV_PYTHON_INSTALL_DIR="$B/python" "$B/bin/uv" pip install -q --python "$VENV/bin/python" pip
-PKGS=(mcp-for-blender orcaslicer-mcp "huggingface_hub[cli,hf_xet]")
+PKGS=(mcp-for-blender orcaslicer-mcp mcp-atlassian "huggingface_hub[cli,hf_xet]")
 [[ "${WITH_MLX:-0}" == "1" ]] && PKGS+=(mlx-lm)
 "$VENV/bin/python" -m pip download -q -d "$B/wheels" --only-binary=:all: "${PKGS[@]}" \
   || "$VENV/bin/python" -m pip download -q -d "$B/wheels" --prefer-binary "${PKGS[@]}" setuptools wheel hatchling

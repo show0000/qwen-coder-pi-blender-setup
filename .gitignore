@@ -6,3 +6,4 @@ out/
 *.gguf
 .DS_Store
 bundle/
+enterprise.env

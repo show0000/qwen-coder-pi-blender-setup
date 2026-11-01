@@ -43,6 +43,8 @@ if have pi; then
   grep -q '"blender"'    "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: blender"    || bad "mcp.json: blender 없음 → 04_setup_blender_mcp.sh"
   grep -q '"orca"'       "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: orca"       || bad "mcp.json: orca 없음 → 05_setup_orca.sh"
   grep -q '"orcaslicer"' "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: orcaslicer" || warn "  mcp.json: orcaslicer 없음 (선택, 07_setup_orcaslicer_mcp.sh)"
+  grep -q '"atlassian"'  "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: atlassian"  || warn "  mcp.json: atlassian 없음 (선택, 09_setup_enterprise_mcp.sh)"
+  grep -q '"gitlab"'     "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: gitlab"     || warn "  mcp.json: gitlab 없음 (선택, 09_setup_enterprise_mcp.sh)"
 else
   bad "pi 없음"
 fi

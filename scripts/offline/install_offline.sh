@@ -59,6 +59,10 @@ info "MCP 서버 설치 (uv tool, wheelhouse)"
 "$BIN/uv" tool install -q --python "$PYV" --reinstall mcp-for-blender
 "$BIN/uv" tool install -q --python "$PYV" --reinstall orcaslicer-mcp
 "$BIN/uv" tool install -q --python "$PYV" --reinstall "huggingface_hub[cli,hf_xet]" || warn "hf CLI 설치 생략"
+"$BIN/uv" tool install -q --python "$PYV" --reinstall mcp-atlassian || warn "mcp-atlassian 설치 생략"
+if [[ -f "$B/pi/mcp-gitlab-prefix.tgz" ]]; then
+  rm -rf "$OPT/mcp-gitlab"; mkdir -p "$OPT/mcp-gitlab"; tar -xzf "$B/pi/mcp-gitlab-prefix.tgz" -C "$OPT/mcp-gitlab" --strip-components 1; unq "$OPT/mcp-gitlab"
+fi
 [[ "${WITH_MLX:-0}" == "1" ]] && "$BIN/uv" tool install -q --python "$PYV" --reinstall mlx-lm
 BLENDER_MCP_CMD="$BIN/$BLENDER_EP"; ORCASLICER_MCP_CMD="$BIN/$ORCASLICER_EP"
 [[ -x "$BLENDER_MCP_CMD" ]] || fail "blender MCP 엔트리포인트가 없습니다: $BLENDER_MCP_CMD"
@@ -88,6 +92,7 @@ export PATH="\$HOME/.local/bin:\$PATH"
 export OFFLINE=1 PI_OFFLINE=1 PI_SKIP_VERSION_CHECK=1 PI_TELEMETRY=0
 export UV_PYTHON_DOWNLOADS=never UV_OFFLINE=1
 export BLENDER_MCP_CMD="$BLENDER_MCP_CMD" ORCASLICER_MCP_CMD="$ORCASLICER_MCP_CMD"
+export ATLASSIAN_MCP_CMD="$BIN/mcp-atlassian" GITLAB_MCP_CMD="$OPT/mcp-gitlab/bin/zereight-mcp-gitlab"
 export HF_REPO="$HF_REPO" QUANT="$QUANT"
 EOF
 for rc in "$HOME/.zprofile" "$HOME/.zshrc"; do
@@ -135,4 +140,5 @@ cat <<EOF
   cd ~/your-project && qwen pi     # 로컬 모델로 pi 실행 (서버가 꺼져 있으면 자동 시작)
   qwen stop       # 서버 종료
 OrcaSlicer 를 쓰면:  ORCA_API_TOKEN=... $REPO/scripts/07_setup_orcaslicer_mcp.sh
+Jira/Confluence/GitLab:  $REPO/scripts/09_setup_enterprise_mcp.sh  (처음 실행 시 ~/.config/qwen-coder/enterprise.env 생성 → 채운 뒤 재실행)
 EOF
