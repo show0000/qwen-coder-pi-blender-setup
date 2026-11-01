@@ -7,6 +7,7 @@
 #   qwen status           server / model / memory at a glance
 #   qwen logs [-n N]      tail server log (follows)
 #   qwen pi [args...]     start pi on the local model in the current directory (starts server if needed)
+#   qwen vision start|stop|status   second server with Qwen3.8-27B VL (viewport screenshots)
 #   qwen check            full health check (check.sh)
 #
 # Installed as ~/.local/bin/qwen by 03_setup_pi.sh / install_offline.sh.
@@ -54,6 +55,7 @@ cmd_status() {
   else
     [[ -n "$p" ]] && echo "api     : loading… (tail: qwen logs)" || echo "api     : down"
   fi
+  curl -fsS --max-time 2 "$VISION_BASE_URL/models" >/dev/null 2>&1 && echo "vision  : up ($VISION_MODEL_ID @ $VISION_PORT)" || { [[ -n "$(vision_gguf)" ]] && echo "vision  : down (qwen vision start)"; }
   if [[ "$(uname -s)" == "Darwin" ]]; then
     local free total
     total=$(sysctl -n hw.memsize | awk '{printf "%.0f", $1/1073741824}')
@@ -76,6 +78,13 @@ case "${1:-}" in
   status|st) cmd_status ;;
   logs|log) shift; cmd_logs "$@" ;;
   pi)      shift; cmd_pi "$@" ;;
+  vision)
+    case "${2:-}" in
+      start)  "$HERE/serve_vision.sh" --bg ;;
+      stop)   "$HERE/serve_vision.sh" --stop ;;
+      status) curl -fsS --max-time 2 "$VISION_BASE_URL/models" >/dev/null 2>&1 && echo "vision  : up ($VISION_BASE_URL, $VISION_MODEL_ID)" || echo "vision  : down" ;;
+      *) echo "usage: qwen vision start|stop|status"; exit 1 ;;
+    esac ;;
   check)   exec "$HERE/check.sh" ;;
-  *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+  *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

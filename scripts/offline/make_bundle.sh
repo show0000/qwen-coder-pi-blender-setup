@@ -101,6 +101,7 @@ BLENDER_EP="$BLENDER_EP"
 ORCASLICER_EP="$ORCASLICER_EP"
 HF_REPO="$HF_REPO"
 QUANT="$QUANT"
+VISION_QUANT="$VISION_QUANT"
 EOF
 
 # ---- 8. optional: model --------------------------------------------------------
@@ -108,6 +109,12 @@ if [[ "$WITH_MODEL" == "1" ]]; then
   info "모델 다운로드 → $B/models/$HF_REPO"
   mkdir -p "$B/models/$HF_REPO"
   UV_PYTHON_INSTALL_DIR="$B/python" "$B/bin/uv" tool run --python "$PY_BIN" --from "huggingface_hub[cli,hf_xet]" hf download "$HF_REPO" --local-dir "$B/models/$HF_REPO" ${QUANT:+--include "*${QUANT}*"}
+fi
+
+if [[ "${WITH_VISION:-0}" == "1" ]]; then
+  info "비전 모델 다운로드 → $B/models/$VISION_HF_REPO"
+  mkdir -p "$B/models/$VISION_HF_REPO"
+  UV_PYTHON_INSTALL_DIR="$B/python" "$B/bin/uv" tool run --python "$PY_BIN" --from "huggingface_hub[cli,hf_xet]" hf download "$VISION_HF_REPO" --local-dir "$B/models/$VISION_HF_REPO" --include "*${VISION_QUANT}*" --include "$VISION_MMPROJ"
 fi
 
 # pack the uv python dir: it contains symlinks, which exFAT/FAT32 USB sticks cannot store

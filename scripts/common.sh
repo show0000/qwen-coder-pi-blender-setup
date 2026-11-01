@@ -40,6 +40,21 @@ case "$BACKEND" in
   *) echo "BACKEND must be llama or mlx (got: $BACKEND)" >&2; exit 1 ;;
 esac
 export MODEL_DIR="${MODEL_DIR:-$MODELS_ROOT/$HF_REPO}"
+
+# Optional second model: Qwen3.8-27B (vision-language, dense) as "eyes" for viewport screenshots.
+# Served by a second llama-server on VISION_PORT, registered in pi as provider "local-vision".
+export VISION_HF_REPO="${VISION_HF_REPO:-unsloth/Qwen3.8-27B-GGUF}"
+export VISION_QUANT="${VISION_QUANT:-UD-Q5_K_XL}"            # ~21GB. UD-Q6_K_XL ~25GB, UD-Q4_K_XL ~18GB
+export VISION_MMPROJ="${VISION_MMPROJ:-mmproj-F16.gguf}"
+export VISION_MODEL_ID="${VISION_MODEL_ID:-qwen3.8-27b-vl}"
+export VISION_PORT="${VISION_PORT:-8081}"
+export VISION_CTX="${VISION_CTX:-32768}"
+export VISION_MODEL_DIR="${VISION_MODEL_DIR:-$MODELS_ROOT/$VISION_HF_REPO}"
+export VISION_BASE_URL="http://127.0.0.1:${VISION_PORT}/v1"
+export VISION_LOG="${VISION_LOG:-$HOME/.local/state/qwen-coder/vision.log}"
+export VISION_PID="${VISION_PID:-$HOME/.local/state/qwen-coder/vision.pid}"
+vision_gguf() { find "$VISION_MODEL_DIR" -type f -name "*${VISION_QUANT}*.gguf" ! -name "mmproj*" 2>/dev/null | sort | head -1; }
+vision_mmproj() { find "$VISION_MODEL_DIR" -type f -name "$VISION_MMPROJ" 2>/dev/null | head -1; }
 export BASE_URL="http://127.0.0.1:${PORT}/v1"
 export SERVER_LOG="${SERVER_LOG:-$HOME/.local/state/qwen-coder/server.log}"
 export SERVER_PID="${SERVER_PID:-$HOME/.local/state/qwen-coder/server.pid}"

@@ -112,10 +112,17 @@ else
   warn "모델 소스가 지정되지 않았습니다. 나중에 가중치를 $MODEL_DIR 에 넣으세요."
 fi
 
+# ---- optional vision model ----------------------------------------------------
+VSRC="${VISION_SRC:-}"; [[ -z "$VSRC" && -d "$B/models/$VISION_HF_REPO" ]] && VSRC="$B/models/$VISION_HF_REPO"
+if [[ -n "$VSRC" ]]; then
+  mkdir -p "$VISION_MODEL_DIR"; cp -v "$VSRC"/*.gguf "$VISION_MODEL_DIR/" 2>/dev/null || true
+fi
+
 # ---- pi / MCP registration (reuse the normal scripts) -------------------------
 "$REPO/scripts/03_setup_pi.sh"
 "$REPO/scripts/04_setup_blender_mcp.sh"
 command -v orca >/dev/null 2>&1 && "$REPO/scripts/05_setup_orca.sh" || true
+[[ -n "$(vision_gguf)" ]] && "$REPO/scripts/06_setup_vision.sh" || true
 
 cat <<EOF
 
