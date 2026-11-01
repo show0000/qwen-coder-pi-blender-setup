@@ -37,7 +37,11 @@ if [[ -f "$U/npm/mcp-gitlab-prefix.tgz" ]]; then
 else echo "  (npm tgz 없음, 건너뜀)"; fi
 
 step 3b/7 "orca 바이너리"
-if [[ -f "$U/bin/orca" ]]; then cp "$U/bin/orca" "$BIN/orca"; chmod +x "$BIN/orca"; unq "$BIN/orca"; echo "  ok: $BIN/orca"; else echo "  (번들에 없음, 건너뜀)"; fi
+if command -v orca >/dev/null 2>&1 || [[ -e "$BIN/orca" ]]; then
+  echo "  이미 설치됨: $(command -v orca || echo "$BIN/orca") — 건너뜀 (Orca 앱이 설치한 CLI 는 덮어쓰지 않음)"
+elif [[ -f "$U/bin/orca" ]]; then
+  cp "$U/bin/orca" "$BIN/orca" && chmod +x "$BIN/orca" && unq "$BIN/orca" && echo "  ok: $BIN/orca" || echo "  복사 실패 (무시)"
+else echo "  (번들에 없음, 건너뜀)"; fi
 
 step 4/7 "env.sh 갱신"
 touch "$ENVF"
@@ -51,6 +55,7 @@ if [[ -d "$U/models/vision" ]]; then
   mkdir -p "$VISION_MODEL_DIR"; cp -v "$U/models/vision/"*.gguf "$VISION_MODEL_DIR/"
 fi
 
+set +e   # from here on, a failing optional step must not abort the rest
 step 6/7 "pi 설정: models.json(ctx), qwen 명령, 스킬, 비전 provider"
 "$REPO/scripts/03_setup_pi.sh" >/dev/null && echo "  ok: models.json ctx=$CTX, ~/.local/bin/qwen"
 "$REPO/scripts/08_setup_pi_config.sh" --with-superpowers | grep -E 'superpowers|설치됨' | sed 's/^/  /'

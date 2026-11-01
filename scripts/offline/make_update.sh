@@ -32,7 +32,8 @@ tar -C "$W/npm" -czf "$W/npm/mcp-gitlab-prefix.tgz" gl-prefix && rm -rf "$W/npm/
 
 info "3a/4 orca 바이너리 (있으면)"
 mkdir -p "$W/bin"
-if command -v orca >/dev/null 2>&1; then cp "$(command -v orca)" "$W/bin/orca"; echo "  ok: $(orca version 2>/dev/null || orca --version 2>/dev/null | head -1)"
+if command -v orca >/dev/null 2>&1 && orca --help 2>&1 | grep -qE 'agent launch|agent-context'; then echo "  Orca 데스크톱 앱 CLI 감지 — 앱과 함께 설치되는 것이므로 번들에 넣지 않음"
+elif command -v orca >/dev/null 2>&1; then cp "$(command -v orca)" "$W/bin/orca"; echo "  ok: $(orca version 2>/dev/null || orca --version 2>/dev/null | head -1)"
 elif command -v go >/dev/null 2>&1; then GOBIN="$W/bin" GOFLAGS=-trimpath go install github.com/orca-cli/orca/cmd/orca@latest && echo "  ok: go install"
 elif command -v brew >/dev/null 2>&1; then brew install orca-cli/tap/orca >/dev/null 2>&1 && cp "$(command -v orca)" "$W/bin/orca" && echo "  ok: brew" || warn "  orca 설치 실패 (선택 항목)"
 else warn "  orca 없음: 이 Mac 에 brew/go 가 없어 건너뜀"; fi
