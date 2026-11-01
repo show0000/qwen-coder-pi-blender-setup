@@ -175,7 +175,9 @@ Qwen3-Coder-Next 는 텍스트 전용이라 Blender 의 get_viewport_screenshot 
 qwen vision start                    # 두 번째 서버 기동
 ```
 
-권장 사용법은 모델을 바꾸지 않고 도구로 부르는 것입니다. coder 가 Blender 에서 `out/view.png` 를 저장한 뒤 `vision-describe out/view.png "질문"` 을 bash 로 실행하면 VLM 서버에 이미지를 보내 텍스트 답을 받아옵니다. 모델 전환이 없어 세션 컨텍스트가 요약되지 않고(VLM 창 32K 와 무관), 세션에는 이미지 대신 수백 토큰의 텍스트만 남습니다. bpy-modeling 스킬과 AGENTS.md 에 이 흐름이 들어 있습니다.
+pi 확장 `vision-bridge`(pi-config/extensions/vision-bridge.ts, 08번이 설치)가 도구 결과에 들어오는 이미지 블록을 가로채 VLM 서버에 보내고, 그 자리에 설명 텍스트를 넣습니다. 덕분에 coder 는 Blender MCP 의 `get_viewport_screenshot` 을 평소처럼 부르고 결과를 읽기만 하면 되고, 모델 전환이나 별도 절차가 필요 없습니다. VLM 서버가 꺼져 있으면 "서버 없음" 텍스트로 대체되어 작업이 끊기지 않습니다. `VISION_BRIDGE=off` 로 끌 수 있고, 현재 모델이 이미지 입력을 지원하면 자동으로 건너뜁니다.
+
+특정 질문을 던지고 싶을 때는 도구로 부르는 방식도 있습니다. coder 가 Blender 에서 `out/view.png` 를 저장한 뒤 `vision-describe out/view.png "질문"` 을 bash 로 실행하면 VLM 서버에 이미지를 보내 텍스트 답을 받아옵니다. 모델 전환이 없어 세션 컨텍스트가 요약되지 않고(VLM 창 32K 와 무관), 세션에는 이미지 대신 수백 토큰의 텍스트만 남습니다. bpy-modeling 스킬과 AGENTS.md 에 이 흐름이 들어 있습니다.
 
 `/model` 로 `qwen3.8-27b-vl` 을 직접 고르는 방식도 가능하지만, 세션이 32K 토큰을 넘은 상태에서 전환하면 pi 가 VLM 창에 맞춰 히스토리를 요약하고 그 요약이 세션에 남습니다. 사람이 이미지를 넣고 직접 대화할 때만 쓰세요. Orca 에서 띄울 때는 `orca agent launch --agent pi --model local-vision/qwen3.8-27b-vl`, 또는 `~/.local/bin/pi-vision` 래퍼를 별도 에이전트로 등록하면 됩니다. Orca 쪽에 VLM 을 따로 등록할 필요는 없습니다(pi 의 provider 일 뿐). 확인이 끝나면 다시 coder 로 돌아오면 됩니다. 코딩 품질은 Coder-Next 가 위이므로 메인은 그대로 두고 눈 역할만 맡기는 구성입니다. 메모리는 coder 68GB + vision 21GB 로 약 90GB 가 상주하니 UE5 와 병행할 땐 `qwen vision stop` 으로 내려두세요.
 

@@ -32,7 +32,7 @@ You run on a local model. Tokens are not free: long context slows every turn and
 - MCP servers may be attached (blender, orcaslicer, atlassian, gitlab). Call them only when the task is about that tool; when many tools are available, use `tool_search` or `codemode` rather than scanning the full catalog.
 - Never run `git push`, `rm -rf`, or anything that leaves the repository, unless the user asked for that specific action in this session.
 - If a tool call fails twice the same way, stop and explain instead of retrying.
-- You cannot see images. To check a screenshot or render, run `vision-describe <image> "<question>"` (local VLM, returns text). Do not switch models for this.
+- You cannot see pixels. Tool results that contain images are automatically replaced by a text description from the local VLM (vision-bridge); read that text. For a specific question about an image file run `vision-describe <image> "<question>"`. Never switch models to look at an image.
 
 ## Skills
 Read the matching SKILL.md before starting: `repo-map` (unfamiliar codebase), `bpy-modeling` (Blender), `print-pipeline` (STL/3MF → OrcaSlicer), `debug-loop` (failing tests or tracebacks), `karpathy-guidelines` (full behavioral guidelines).
