@@ -123,6 +123,7 @@ fi
 "$REPO/scripts/04_setup_blender_mcp.sh"
 command -v orca >/dev/null 2>&1 && "$REPO/scripts/05_setup_orca.sh" || true
 [[ -n "$(vision_gguf)" ]] && "$REPO/scripts/06_setup_vision.sh" || true
+"$REPO/scripts/08_setup_pi_config.sh"
 
 cat <<EOF
 

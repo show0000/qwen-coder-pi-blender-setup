@@ -215,6 +215,27 @@ qwen vision start|stop|status   # 비전 모델 서버 (06 설치 시)
 
 68GB 가 메모리에 상주하므로 Blender/UE5 작업을 길게 할 때는 `qwen stop` 으로 내려두는 편이 좋습니다.
 
+## 컨텍스트 절약형 작업 규칙과 스킬 (08_setup_pi_config.sh)
+
+로컬 모델은 컨텍스트를 채울수록 느려지고 정확도가 떨어지므로, "필요한 것만 읽고 짧게 보고하는" 규칙을 pi 전역에 깔아 둡니다. `pi-config/` 의 내용을 `~/.pi/agent/` 에 설치합니다.
+
+```bash
+./scripts/08_setup_pi_config.sh          # 복사 (기존 AGENTS.md 는 백업)
+./scripts/08_setup_pi_config.sh --link   # 심볼릭 링크: git pull 만으로 갱신
+```
+
+| 항목 | 내용 |
+|---|---|
+| AGENTS.md | 전역 규칙: grep/find 로 찾은 뒤 필요한 범위만 read, 도구 출력은 head/tail 로 제한, 같은 파일 재독 금지, edit 우선, 10줄 이내 보고, 추측성 추상화 금지, 실패 2회면 중단 |
+| skills/repo-map | 낯선 저장소를 파일을 열지 않고 600토큰 안에 파악해 `.pi/REPO_MAP.md` 로 저장. 이후 턴은 그 파일만 읽음 |
+| skills/bpy-modeling | 이미지 없이 bpy 로 모델링: 멱등 함수, data API 우선, dimensions/정점수/manifold 검사로 수치 검증, 3.x/4.x API 차이 |
+| skills/print-pipeline | Blender 내보내기 → OrcaSlicer 로드/배치/슬라이스/경고 확인 → 시간·필라멘트 보고 순서 |
+| skills/debug-loop | 실패 테스트 하나만 재현, 트레이스백 아래부터, 가설 하나, 최소 수정, 2회 실패 시 중단 |
+| prompts/ | `/review` (uncommitted diff 만 리뷰), `/plan <task>` (구현 전 12줄 계획) |
+| settings | compaction keepRecentTokens 24000, 기본 도구에 grep/find/ls 추가 |
+
+스킬은 pi 가 시작할 때 이름과 설명만 시스템 프롬프트에 넣고 본문은 작업이 맞을 때 읽는 점진 로딩 방식이라 평소 컨텍스트 비용이 거의 없습니다. 모델이 스스로 안 읽으면 `/skill:bpy-modeling` 처럼 직접 호출할 수 있습니다. 프로젝트별 규칙(Blender 버전, 테스트 명령 등)은 프로젝트 루트 AGENTS.md 에 적으면 전역 규칙 뒤에 이어 붙습니다.
+
 ## 프로젝트별 설정
 
 `templates/` 아래 파일을 프로젝트 루트에 복사하면 됩니다.
