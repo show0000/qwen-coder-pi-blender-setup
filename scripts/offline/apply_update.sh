@@ -37,8 +37,13 @@ if [[ -f "$U/npm/mcp-gitlab-prefix.tgz" ]]; then
 else echo "  (npm tgz 없음, 건너뜀)"; fi
 
 step 3b/7 "orca 바이너리"
-if command -v orca >/dev/null 2>&1 || [[ -e "$BIN/orca" ]]; then
-  echo "  이미 설치됨: $(command -v orca || echo "$BIN/orca") — 건너뜀 (Orca 앱이 설치한 CLI 는 덮어쓰지 않음)"
+if command -v orca >/dev/null 2>&1 || [[ -e "$BIN/orca" || -L "$BIN/orca" ]]; then
+  if [[ -L "$BIN/orca" && ! -e "$BIN/orca" ]]; then
+    echo "  주의: $BIN/orca 는 깨진 심볼릭 링크입니다 → $(readlink "$BIN/orca")"
+    echo "        Orca 앱 설정에서 CLI 를 다시 설치하세요. (덮어쓰지 않음)"
+  else
+    echo "  이미 설치됨: $(command -v orca || echo "$BIN/orca") — 건너뜀 (Orca 앱이 설치한 CLI 는 덮어쓰지 않음)"
+  fi
 elif [[ -f "$U/bin/orca" ]]; then
   cp "$U/bin/orca" "$BIN/orca" && chmod +x "$BIN/orca" && unq "$BIN/orca" && echo "  ok: $BIN/orca" || echo "  복사 실패 (무시)"
 else echo "  (번들에 없음, 건너뜀)"; fi
