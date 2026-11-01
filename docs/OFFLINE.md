@@ -108,9 +108,22 @@ for i in 1 2 3; do f="Qwen3-Coder-Next-UD-Q6_K_XL-0000${i}-of-00003.gguf"; curl 
 - pi 는 `PI_OFFLINE=1`, `PI_SKIP_VERSION_CHECK=1` 로 동작하여 pi.dev 카탈로그 갱신과 버전 체크를 하지 않습니다.
 - Blender 애드온 설치(`install-addon`)는 패키지 안의 파일을 복사하는 것이라 네트워크 없이 동작합니다.
 
-## 업데이트
+## 업데이트 (설치 후 갱신은 항상 이 두 명령)
 
-번들을 다시 만들어 같은 명령으로 설치하면 됩니다. `install_offline.sh` 는 rsync 없이도 동작하며 기존 설치를 덮어쓰고(`--reinstall`), `models.json`/`mcp.json` 은 병합하므로 다른 설정을 지우지 않습니다. 가중치가 이미 있으면 두 번째 인자를 생략하세요.
+```bash
+# 온라인 Mac (git pull 후)
+./scripts/offline/make_update.sh            # → ~/Downloads/update.tgz  (스크립트 + 사내 MCP 패키지, 수십 MB)
+./scripts/offline/make_update.sh --with-vision   # 비전 모델까지 (+22GB)
+cd ~/Downloads && python3 -m http.server 8000
+
+# 오프라인 Mac
+curl -C - -o ~/update.tgz http://<온라인 Mac IP>:8000/update.tgz
+tar -xzf ~/update.tgz -C ~ && ~/update/repo/scripts/offline/apply_update.sh ~/update
+```
+
+apply_update.sh 가 스크립트 복사, mcp-atlassian/mcp-gitlab 설치, env.sh 갱신, 03(ctx·qwen 명령)·08(스킬)·06(비전, 가중치가 있으면)·09(사내 MCP, 토큰이 있으면) 를 순서대로 처리합니다. 여러 번 실행해도 안전합니다.
+
+전체 재설치가 필요할 때만 번들을 다시 만들어 같은 명령으로 설치하면 됩니다. `install_offline.sh` 는 rsync 없이도 동작하며 기존 설치를 덮어쓰고(`--reinstall`), `models.json`/`mcp.json` 은 병합하므로 다른 설정을 지우지 않습니다. 가중치가 이미 있으면 두 번째 인자를 생략하세요.
 
 ## 문제 해결
 
