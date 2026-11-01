@@ -10,7 +10,7 @@ set -euo pipefail
 export BACKEND="${BACKEND:-llama}"
 export MODEL_ID="${MODEL_ID:-qwen3-coder-next}"             # id used by server alias + pi
 export MODELS_ROOT="${MODELS_ROOT:-$HOME/models}"
-export CTX="${CTX:-131072}"
+export CTX="${CTX:-262144}"                                # native max for Qwen3-Coder-Next; KV cache ~6GB at full
 export MAX_TOKENS="${MAX_TOKENS:-32768}"
 export PI_AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 export PORT="${PORT:-8080}"

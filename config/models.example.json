@@ -9,7 +9,7 @@
         {
           "id": "qwen3-coder-next",
           "name": "Qwen3-Coder-Next 80B-A3B (local llama.cpp)",
-          "contextWindow": 131072,
+          "contextWindow": 262144,
           "maxTokens": 32768,
           "input": ["text"],
           "samplingParams": { "temperature": 1.0, "top_p": 0.95, "top_k": 40, "min_p": 0.01 }

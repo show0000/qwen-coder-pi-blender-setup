@@ -4,7 +4,8 @@
 - Blender version: 4.x  ← 실제 사용 버전으로 바꾸세요 (bpy API가 버전별로 다름)
 - Python inside Blender: 3.11
 - OrcaSlicer MCP build with Remote API enabled on 127.0.0.1:13130
-- Local model: Qwen3-Coder-Next via pi. Keep tool calls small and sequential.
+- Local model: Qwen3-Coder-Next via pi (256K context). Keep tool calls small and sequential.
+- Read only what the task needs: `grep`/`find` first, then `read` specific files or line ranges. Never dump whole directories or large generated files into context.
 
 ## Blender (bpy) rules
 - Prefer the `blender` MCP tools for live scene changes (get_scene_info, execute_blender_code, get_viewport_screenshot).

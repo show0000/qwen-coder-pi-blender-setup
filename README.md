@@ -19,9 +19,9 @@ orca ── run 마다 git worktree 생성 ──▶ pi-local "<task>" (비대�
 |---|---|
 | 모델 | Qwen/Qwen3-Coder-Next (80B total / 3B active MoE), Apache 2.0 |
 | 가중치 | unsloth/Qwen3-Coder-Next-GGUF, UD-Q6_K_XL 약 68GB (대안: mlx-community/Qwen3-Coder-Next-6bit) |
-| 컨텍스트 | 네이티브 262,144 토큰. 기본 셋업은 131,072로 로드 |
+| 컨텍스트 | 262,144 토큰 (네이티브 최대). 하이브리드 어텐션이라 전체를 채워도 KV 캐시 약 6GB |
 | 예상 속도 | M3 Max 기준 약 20~30 tok/s |
-| 메모리 | 모델 68GB + KV 캐시 수 GB. Blender와 OrcaSlicer를 동시에 띄워도 128GB 안에서 여유 있음 (UE5까지 동시에 띄우면 4bit 권장) |
+| 메모리 | 모델 68GB + KV 캐시 최대 약 6GB. Blender와 OrcaSlicer를 동시에 띄워도 128GB 안에서 여유 있음 (UE5까지 동시에 띄우면 4bit 권장) |
 
 ## 빠른 시작
 
@@ -92,7 +92,7 @@ QUANT=UD-Q4_K_XL ./scripts/02_serve_model.sh --bg
 - `--bg` 없이 실행하면 포그라운드(Ctrl+C 로 종료)라 tmux 나 두 번째 터미널에서 쓰면 됩니다.
 - `--stop` 으로 백그라운드 서버를 끕니다. 로그는 `~/.local/state/qwen-coder/server.log`.
 - 샘플링은 Qwen/unsloth 권장값(temp 1.0, top_p 0.95, top_k 40, min_p 0.01, repeat penalty 끔)으로 고정돼 있습니다.
-- `CTX=262144` 로 네이티브 전체 컨텍스트를 쓸 수 있습니다. 모델 alias 는 `qwen3-coder-next` 로 pi 설정과 맞물립니다.
+- 기본 컨텍스트는 네이티브 최대인 262144 입니다. 메모리를 아끼려면 `CTX=131072` 로 낮출 수 있습니다 (03_setup_pi.sh 도 같은 값으로 다시 실행). 모델 alias 는 `qwen3-coder-next` 로 pi 설정과 맞물립니다.
 - 첫 로드는 1~2분 걸립니다. 그 전엔 `/v1/models` 가 응답하지 않습니다.
 
 pi 에는 llama.cpp 라우터 모드(`--models-dir`, `/llama` 명령)도 내장돼 있지만, 이 셋업은 단일 모델을 고정 포트로 띄우는 단순한 방식을 씁니다. 여러 GGUF 를 pi 안에서 바꿔가며 쓰고 싶으면 pi 문서의 llama-cpp.md 를 참고하세요.
@@ -113,7 +113,7 @@ pi 에는 llama.cpp 라우터 모드(`--models-dir`, `/llama` 명령)도 내장�
         {
           "id": "qwen3-coder-next",
           "name": "Qwen3-Coder-Next 80B-A3B (local, llama)",
-          "contextWindow": 131072,
+          "contextWindow": 262144,
           "maxTokens": 32768,
           "input": ["text"],
           "samplingParams": { "temperature": 1.0, "top_p": 0.95, "top_k": 40, "min_p": 0.01 }
@@ -239,7 +239,7 @@ cp -r templates/AGENTS.md templates/.pi ~/your-blender-project/
 
 - 메모리: Activity Monitor에서 "메모리 압박"이 노란색 이상이면 `CTX=65536` 으로 낮추세요.
 - 첫 토큰 지연: 긴 컨텍스트를 처음 넣을 때 prefill이 수십 초 걸릴 수 있습니다. llama-server 는 `--cache-reuse` 로 프롬프트 캐시를 재사용하므로 같은 세션에서는 빨라집니다.
-- 컴팩션: pi는 contextWindow − reserveTokens(기본 16384)에서 요약을 시작합니다. 131K 창이면 충분합니다.
+- 컴팩션: pi는 contextWindow − reserveTokens(기본 16384)에서 요약을 시작합니다. 긴 창은 안전망일 뿐이고, 200K 를 넘게 채우면 prefill 이 분 단위로 길어지고 뒷부분 정확도도 떨어지므로 AGENTS.md 에 '필요한 파일만 grep/read 로 읽기' 규칙을 두는 편이 결과가 좋습니다.
 - 오프라인: `PI_OFFLINE=1 pi` 로 pi.dev 카탈로그 갱신과 버전 체크를 끕니다.
 - 안전: pi는 도구 호출 전에 승인을 묻지 않습니다. 중요한 디렉터리에서는 git으로 작업 상태를 자주 커밋하세요.
 - Blender 버전: bpy API가 버전마다 바뀌므로 AGENTS.md에 사용 중인 Blender 버전을 적어두면 코드 품질이 눈에 띄게 좋아집니다.

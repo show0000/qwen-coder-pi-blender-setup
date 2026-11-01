@@ -29,7 +29,7 @@ JSON
 )
 merge_json "$PI_AGENT_DIR/models.json" "$patch"
 
-# sensible compaction headroom for a 131K window
+# compaction headroom
 merge_json "$PI_AGENT_DIR/settings.json" '{"compaction": {"reserveTokens": 16384}}'
 
 # install `qwen` control command
