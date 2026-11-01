@@ -41,7 +41,6 @@ if have pi; then
   ok "pi $(pi --version 2>/dev/null)"
   grep -q "\"$MODEL_ID\"" "$PI_AGENT_DIR/models.json" 2>/dev/null && ok "models.json 에 $MODEL_ID 등록" || bad "models.json 미등록 → 03_setup_pi.sh"
   grep -q '"blender"'    "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: blender"    || bad "mcp.json: blender 없음 → 04_setup_blender_mcp.sh"
-  grep -q '"orca"'       "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: orca"       || bad "mcp.json: orca 없음 → 05_setup_orca.sh"
   grep -q '"orcaslicer"' "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: orcaslicer" || warn "  mcp.json: orcaslicer 없음 (선택, 07_setup_orcaslicer_mcp.sh)"
   grep -q '"atlassian"'  "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: atlassian"  || warn "  mcp.json: atlassian 없음 (선택, 09_setup_enterprise_mcp.sh)"
   grep -q '"gitlab"'     "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: gitlab"     || warn "  mcp.json: gitlab 없음 (선택, 09_setup_enterprise_mcp.sh)"
@@ -50,7 +49,10 @@ else
 fi
 
 echo "== orca"
-have orca && ok "orca $(orca version 2>/dev/null || orca --version 2>/dev/null)" || bad "orca 없음 → 05_setup_orca.sh"
+if have orca; then
+  if orca --help 2>&1 | grep -qE 'agent launch|agent-context'; then ok "Orca 앱 $(orca --version 2>/dev/null | head -1) — Settings → Agents 에서 Pi 활성화 후 사용"
+  else ok "orca $(orca version 2>/dev/null || orca --version 2>/dev/null)"; grep -q '"orca"' "$PI_AGENT_DIR/mcp.json" 2>/dev/null && ok "mcp.json: orca" || bad "mcp.json: orca 없음 → 05_setup_orca.sh"; fi
+else bad "orca 없음 → 05_setup_orca.sh"; fi
 [[ -x "$HOME/.local/bin/pi-local" ]] && ok "pi-local 래퍼 있음" || bad "pi-local 없음 → 05_setup_orca.sh"
 
 echo "== Blender (addon socket 9876)"

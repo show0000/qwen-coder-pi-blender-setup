@@ -29,7 +29,7 @@ You run on a local model. Tokens are not free: long context slows every turn and
 - Python: type hints on public functions, f-strings, pathlib. Shell: `set -euo pipefail`, quote variables.
 
 ## Tools
-- MCP servers may be attached (blender, orca, orcaslicer). Call them only when the task is about that tool; when many tools are available, use `tool_search` or `codemode` rather than scanning the full catalog.
+- MCP servers may be attached (blender, orcaslicer, atlassian, gitlab). Call them only when the task is about that tool; when many tools are available, use `tool_search` or `codemode` rather than scanning the full catalog.
 - Never run `git push`, `rm -rf`, or anything that leaves the repository, unless the user asked for that specific action in this session.
 - If a tool call fails twice the same way, stop and explain instead of retrying.
 

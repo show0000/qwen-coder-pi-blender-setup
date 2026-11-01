@@ -8,11 +8,10 @@ GUI 모델 앱(LM Studio, Ollama)은 쓰지 않습니다. 전부 brew / uv tool 
 터미널 ── pi (coding agent) ──▶ http://127.0.0.1:8080/v1  (llama-server, 또는 mlx_lm.server)
             │                          └─ Qwen3-Coder-Next GGUF UD-Q6_K_XL (~68GB, 262K ctx)
             ├─ MCP: blender    ──▶ uvx mcp-for-blender  ──▶ Blender addon (port 9876)
-            ├─ MCP: orca       ──▶ orca mcp serve       ──▶ 워크트리/run 상태 (~/.orca/orca.db)
             ├─ MCP: orcaslicer ──▶ uvx orcaslicer-mcp   ──▶ OrcaSlicer Remote API (선택)
             ├─ MCP: atlassian  ──▶ mcp-atlassian        ──▶ 사내 Jira / Confluence (PAT)
             └─ MCP: gitlab     ──▶ @zereight/mcp-gitlab ──▶ 사내 GitLab (PAT)
-orca ── run 마다 git worktree 생성 ──▶ pi-local "<task>" (비대화형 pi, 같은 로컬 모델)
+Orca 앱 ── worktree 마다 에이전트로 pi 실행 (Settings → Agents → Pi) ──▶ 같은 로컬 모델
 ```
 
 ## 하드웨어 기준
@@ -146,26 +145,26 @@ PyPI 패키지는 `blender-mcp`에서 `mcp-for-blender`로 이름이 바뀌었�
 
 주의: `uvx mcp-for-blender` 를 터미널에서 직접 실행하지 마세요. MCP 클라이언트(pi)가 stdio로 띄웁니다.
 
-### 5. orca 오케스트레이터 (05_setup_orca.sh)
+### 5. Orca 연동 (05_setup_orca.sh)
 
-orca(github.com/orca-cli/orca)는 run 마다 git worktree를 만들고 상태를 SQLite에 기록하면서 여러 코딩 에이전트를 병렬로 돌리는 Go 바이너리입니다. MCP를 지원하는 어떤 에이전트와도 붙습니다.
+"orca" 라는 이름의 도구가 둘 있어 스크립트가 설치된 쪽을 감지해 처리합니다.
 
-스크립트가 하는 일:
+Orca 데스크톱 앱 (onorca.dev, stablyai/orca): 에이전트 워크스페이스 매니저로 Pi 를 공식 지원합니다(훅, 상태 표시, 네이티브 채팅). 이 경우 Pi 가 Orca 의 에이전트가 되고, Pi 는 이미 로컬 qwen 을 쓰므로 추가 연결이 없습니다.
 
-1. `brew install orca-cli/tap/orca`
-2. `~/.pi/agent/mcp.json` 에 `orca` 서버 등록 (`orca mcp serve`, stdio). pi 세션 안에서 orca의 run/pod 도구를 호출해 워크트리 생성과 상태 추적을 맡길 수 있습니다.
-3. `~/.local/bin/pi-local` 래퍼 생성. `pi --model local/qwen3-coder-next -p "<prompt>"` 를 감싼 비대화형 실행기라서 orca가 run 을 띄울 때 에이전트 커맨드로 지정할 수 있습니다.
-
-repo 쪽:
+1. Orca 앱 → Settings → Agents → Pi 활성화. 자동 감지가 안 되면 Command 에 `~/.local/bin/pi` 경로 입력
+2. Arguments 에 `--model local/qwen3-coder-next` (pi 에서 /model → Ctrl+S 로 기본 저장했다면 생략 가능)
+3. `qwen start` 로 서버를 띄운 뒤 Orca 에서 worktree 생성 또는 CLI:
 
 ```bash
-cd ~/your-repo
-orca init                             # .orca/ 생성 (설치된 버전의 명령은 orca --help 로 확인)
-cp templates/orca/AGENTS.md .orca/    # 모든 run 에 주입되는 지침
-orca run "Add retry logic to the MQTT client"
+orca worktree create --name my-task --agent pi --prompt "작업 설명"
+orca agent launch --agent pi --model local/qwen3-coder-next --worktree <selector>
 ```
 
-주의: orca 저장소의 adapter 는 claude-code, codex, aider, opencode 등 이름으로 등록되며, custom command adapter 의 설정 필드명은 설치된 버전의 `.orca/orca.toml` 문서를 따릅니다. 해당 필드가 없으면 pi 안에서 orca MCP 도구로 run 을 관리하는 방식(2번)만 사용하면 됩니다.
+pi 가 worktree 안에서 실행되므로 `~/.pi/agent` 의 모델·MCP·스킬·AGENTS.md 설정이 그대로 적용됩니다.
+
+orca-cli/orca (Go 오케스트레이터): `orca mcp serve` 를 pi 에 MCP 서버로 등록해 pi 세션 안에서 run/worktree 를 관리합니다. repo 에서 `orca init` 후 `templates/orca/AGENTS.md` 를 `.orca/` 에 복사하세요.
+
+두 경우 모두 `~/.local/bin/pi-local` (비대화형 pi 래퍼, `pi --model local/qwen3-coder-next -p "<prompt>"`) 을 만들어 자동화나 다른 도구에서 호출할 수 있게 합니다.
 
 ### 6. (선택) 비전 모델: 뷰포트 스크린샷 보기 (06_setup_vision.sh)
 
