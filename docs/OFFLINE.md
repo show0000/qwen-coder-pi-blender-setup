@@ -119,6 +119,7 @@ cd ~/Downloads && python3 -m http.server 8000
 # 오프라인 Mac
 curl -C - -o ~/update.tgz http://<온라인 Mac IP>:8000/update.tgz
 tar -xzf ~/update.tgz -C ~ && ~/update/repo/scripts/offline/apply_update.sh ~/update
+# 스크립트를 다른 위치에 두고 있으면:  QWEN_REPO=~/Dev/Lab/qwen-coder-pi-blender-setup ~/update/repo/scripts/offline/apply_update.sh ~/update
 ```
 
 apply_update.sh 가 스크립트 복사, mcp-atlassian/mcp-gitlab 설치, env.sh 갱신, 03(ctx·qwen 명령)·08(스킬)·06(비전, 가중치가 있으면)·09(사내 MCP, 토큰이 있으면) 를 순서대로 처리합니다. 여러 번 실행해도 안전합니다.

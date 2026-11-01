@@ -17,7 +17,7 @@ source "$B/manifest.env"
 
 export OFFLINE=1
 # keep a stable copy of the scripts outside the bundle so `qwen` keeps working after the bundle is deleted
-REPO="$HOME/qwen-coder-pi-blender-setup"
+REPO="${QWEN_REPO:-$HOME/qwen-coder-pi-blender-setup}"
 if [[ "$(cd "$B/repo" && pwd)" != "$REPO" ]]; then
   mkdir -p "$REPO"; tar -C "$B/repo" -cf - . | tar -C "$REPO" -xf -
 fi
@@ -94,6 +94,7 @@ export UV_PYTHON_DOWNLOADS=never UV_OFFLINE=1
 export BLENDER_MCP_CMD="$BLENDER_MCP_CMD" ORCASLICER_MCP_CMD="$ORCASLICER_MCP_CMD"
 export ATLASSIAN_MCP_CMD="$BIN/mcp-atlassian" GITLAB_MCP_CMD="$OPT/mcp-gitlab/bin/zereight-mcp-gitlab"
 export HF_REPO="$HF_REPO" QUANT="$QUANT"
+export QWEN_REPO="$REPO"
 EOF
 for rc in "$HOME/.zprofile" "$HOME/.zshrc"; do
   grep -qs 'qwen-coder/env.sh' "$rc" || printf '\n[ -f "%s" ] && source "%s"\n' "$ENVF" "$ENVF" >> "$rc"

@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 # OFFLINE Mac: apply an update.tgz made by make_update.sh. Safe to re-run.
 #   tar -xzf ~/update.tgz -C ~ && ~/update/repo/scripts/offline/apply_update.sh ~/update
+#   QWEN_REPO=~/Dev/Lab/qwen-coder-pi-blender-setup ...   # scripts live somewhere other than ~/qwen-coder-pi-blender-setup
 set -euo pipefail
 U="${1:?usage: apply_update.sh <update-dir>}"; U="$(cd "$U" && pwd)"
 [[ -f "$U/VERSION" ]] || { echo "update 폴더가 아닙니다: $U" >&2; exit 1; }
 ENVF="$HOME/.config/qwen-coder/env.sh"
 [[ -f "$ENVF" ]] && source "$ENVF"
 export OFFLINE=1 UV_PYTHON_DOWNLOADS=never UV_OFFLINE=1
-REPO="$HOME/qwen-coder-pi-blender-setup"; BIN="$HOME/.local/bin"; OPT="$HOME/.local/opt"
+BIN="$HOME/.local/bin"; OPT="$HOME/.local/opt"
+# where the scripts live on this Mac: QWEN_REPO env > existing `qwen` symlink target > default
+REPO="${QWEN_REPO:-}"
+if [[ -z "$REPO" && -L "$BIN/qwen" ]]; then
+  t="$(readlink "$BIN/qwen")"; [[ -f "$t" ]] && REPO="$(cd "$(dirname "$t")/.." && pwd)"
+fi
+REPO="${REPO:-$HOME/qwen-coder-pi-blender-setup}"
 mkdir -p "$REPO" "$BIN" "$OPT"
 unq() { xattr -dr com.apple.quarantine "$@" 2>/dev/null || true; }
 step() { printf '\033[32m[%s]\033[0m %s\n' "$1" "$2"; }
@@ -33,6 +40,7 @@ step 4/7 "env.sh 갱신"
 touch "$ENVF"
 grep -q 'ATLASSIAN_MCP_CMD' "$ENVF" || echo "export ATLASSIAN_MCP_CMD=\"$BIN/mcp-atlassian\" GITLAB_MCP_CMD=\"$OPT/mcp-gitlab/bin/zereight-mcp-gitlab\"" >> "$ENVF"
 grep -q 'export CTX=' "$ENVF" || echo "export CTX=262144" >> "$ENVF"
+grep -q 'export QWEN_REPO=' "$ENVF" && sed -i '' "s|^export QWEN_REPO=.*|export QWEN_REPO=\"$REPO\"|" "$ENVF" || echo "export QWEN_REPO=\"$REPO\"" >> "$ENVF"
 source "$ENVF"
 
 step 5/7 "비전 모델 (있으면)"
