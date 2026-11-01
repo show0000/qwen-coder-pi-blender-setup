@@ -48,6 +48,14 @@ JSON
 )
 merge_json "$PI_AGENT_DIR/models.json" "$patch"
 
+# wrapper so Orca (or anything) can launch pi pre-set to the vision model
+mkdir -p "$HOME/.local/bin"
+cat > "$HOME/.local/bin/pi-vision" <<EOF
+#!/usr/bin/env bash
+exec pi --model "local-vision/$VISION_MODEL_ID" "\$@"
+EOF
+chmod +x "$HOME/.local/bin/pi-vision"
+
 cat <<EOF2
 
 등록 완료. 사용법:
@@ -56,5 +64,7 @@ cat <<EOF2
   → get_viewport_screenshot 결과를 모델이 직접 봅니다. 확인이 끝나면 /model 로 coder 로 복귀.
   qwen vision stop
 
+Orca 에서: agent launch --agent pi --model local-vision/$VISION_MODEL_ID
+           또는 Settings → Agents 에 Command=~/.local/bin/pi-vision 인 항목을 추가
 메모리: coder 68GB + vision 21GB ≈ 90GB. UE5 를 같이 띄울 땐 vision 은 필요할 때만 켜세요.
 EOF2

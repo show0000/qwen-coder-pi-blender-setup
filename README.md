@@ -175,7 +175,7 @@ Qwen3-Coder-Next 는 텍스트 전용이라 Blender 의 get_viewport_screenshot 
 qwen vision start                    # 두 번째 서버 기동
 ```
 
-pi 안에서 `/model` 로 `qwen3.8-27b-vl` 을 고르면(또는 Ctrl+P 순환) 그 턴부터 스크린샷을 모델이 직접 봅니다. 확인이 끝나면 다시 coder 로 돌아오면 됩니다. 코딩 품질은 Coder-Next 가 위이므로 메인은 그대로 두고 눈 역할만 맡기는 구성입니다. 메모리는 coder 68GB + vision 21GB 로 약 90GB 가 상주하니 UE5 와 병행할 땐 `qwen vision stop` 으로 내려두세요.
+pi 안에서 `/model` 로 `qwen3.8-27b-vl` 을 고르면(또는 Ctrl+P 순환) 그 턴부터 스크린샷을 모델이 직접 봅니다. Orca 에서 띄울 때는 `orca agent launch --agent pi --model local-vision/qwen3.8-27b-vl`, 또는 `~/.local/bin/pi-vision` 래퍼를 별도 에이전트로 등록하면 됩니다. Orca 쪽에 VLM 을 따로 등록할 필요는 없습니다(pi 의 provider 일 뿐). 확인이 끝나면 다시 coder 로 돌아오면 됩니다. 코딩 품질은 Coder-Next 가 위이므로 메인은 그대로 두고 눈 역할만 맡기는 구성입니다. 메모리는 coder 68GB + vision 21GB 로 약 90GB 가 상주하니 UE5 와 병행할 땐 `qwen vision stop` 으로 내려두세요.
 
 오프라인 번들에 포함하려면 `WITH_VISION=1 ./scripts/offline/make_bundle.sh --with-model`, 또는 가중치 폴더를 `VISION_SRC=<폴더> install_offline.sh ...` 로 넘기면 됩니다. 수동 다운로드 링크는 https://huggingface.co/unsloth/Qwen3.8-27B-GGUF 의 `Qwen3.8-27B-UD-Q5_K_XL.gguf` 와 `mmproj-F16.gguf` 두 파일입니다.
 
