@@ -8,7 +8,17 @@ bad()  { printf '  %s✘%s %s\n' "$c_red"   "$c_reset" "$*"; }
 port_open() { nc -z -G 1 127.0.0.1 "$1" >/dev/null 2>&1; }
 
 echo "== 모델"
-[[ -f "$MODEL_DIR/config.json" ]] && ok "가중치 있음: $MODEL_DIR" || bad "가중치 없음 ($MODEL_DIR)"
+if [[ "$BACKEND" == "llama" ]]; then
+  main=$(gguf_main_file)
+  if [[ -n "$main" ]]; then
+    n=$(find "$(dirname "$main")" -name "*${QUANT}*.gguf" | wc -l | tr -d ' ')
+    ok "GGUF 있음 ($n 샤드, $(du -shc "$(dirname "$main")"/*${QUANT}*.gguf | tail -1 | cut -f1)): $main"
+  else
+    bad "GGUF 없음: $MODEL_DIR 아래에 *${QUANT}*.gguf 가 없습니다 (QUANT=$QUANT)"
+  fi
+else
+  [[ -f "$MODEL_DIR/config.json" ]] && ok "MLX 가중치 있음: $MODEL_DIR" || bad "MLX 가중치 없음 ($MODEL_DIR)"
+fi
 
 echo "== 모델 서버 ($BACKEND, $BASE_URL)"
 if models=$(curl -fsS --max-time 3 "$BASE_URL/models" 2>/dev/null); then
