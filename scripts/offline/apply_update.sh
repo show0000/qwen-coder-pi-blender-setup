@@ -36,6 +36,9 @@ if [[ -f "$U/npm/mcp-gitlab-prefix.tgz" ]]; then
   echo "  ok: $OPT/mcp-gitlab/bin/zereight-mcp-gitlab"
 else echo "  (npm tgz 없음, 건너뜀)"; fi
 
+step 3b/7 "orca 바이너리"
+if [[ -f "$U/bin/orca" ]]; then cp "$U/bin/orca" "$BIN/orca"; chmod +x "$BIN/orca"; unq "$BIN/orca"; echo "  ok: $BIN/orca"; else echo "  (번들에 없음, 건너뜀)"; fi
+
 step 4/7 "env.sh 갱신"
 touch "$ENVF"
 grep -q 'ATLASSIAN_MCP_CMD' "$ENVF" || echo "export ATLASSIAN_MCP_CMD=\"$BIN/mcp-atlassian\" GITLAB_MCP_CMD=\"$OPT/mcp-gitlab/bin/zereight-mcp-gitlab\"" >> "$ENVF"
@@ -52,6 +55,9 @@ step 6/7 "pi 설정: models.json(ctx), qwen 명령, 스킬, 비전 provider"
 "$REPO/scripts/03_setup_pi.sh" >/dev/null && echo "  ok: models.json ctx=$CTX, ~/.local/bin/qwen"
 "$REPO/scripts/08_setup_pi_config.sh" --with-superpowers | grep -E 'superpowers|설치됨' | sed 's/^/  /'
 if [[ -n "$(vision_gguf)" && -n "$(vision_mmproj)" ]]; then "$REPO/scripts/06_setup_vision.sh" >/dev/null && echo "  ok: local-vision provider"; fi
+
+step 6b/7 "orca MCP 등록"
+if command -v orca >/dev/null 2>&1; then "$REPO/scripts/05_setup_orca.sh" >/dev/null 2>&1 && echo "  ok: mcp.json orca, ~/.local/bin/pi-local"; else echo "  (orca 없음, 건너뜀)"; fi
 
 step 7/7 "사내 MCP (Jira/Confluence/GitLab)"
 ENT="$HOME/.config/qwen-coder/enterprise.env"

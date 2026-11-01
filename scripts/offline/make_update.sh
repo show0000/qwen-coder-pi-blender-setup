@@ -30,6 +30,13 @@ command -v npm >/dev/null 2>&1 || fail "npm 이 없습니다 (node 설치 필요
 npm_config_prefix="$W/npm/gl-prefix" npm install -g --ignore-scripts --no-fund --no-audit @zereight/mcp-gitlab >/dev/null
 tar -C "$W/npm" -czf "$W/npm/mcp-gitlab-prefix.tgz" gl-prefix && rm -rf "$W/npm/gl-prefix"
 
+info "3a/4 orca 바이너리 (있으면)"
+mkdir -p "$W/bin"
+if command -v orca >/dev/null 2>&1; then cp "$(command -v orca)" "$W/bin/orca"; echo "  ok: $(orca version 2>/dev/null || orca --version 2>/dev/null | head -1)"
+elif command -v go >/dev/null 2>&1; then GOBIN="$W/bin" GOFLAGS=-trimpath go install github.com/orca-cli/orca/cmd/orca@latest && echo "  ok: go install"
+elif command -v brew >/dev/null 2>&1; then brew install orca-cli/tap/orca >/dev/null 2>&1 && cp "$(command -v orca)" "$W/bin/orca" && echo "  ok: brew" || warn "  orca 설치 실패 (선택 항목)"
+else warn "  orca 없음: 이 Mac 에 brew/go 가 없어 건너뜀"; fi
+
 if [[ "$WITH_VISION" == "1" ]]; then
   info "3b/4 비전 모델 ($VISION_HF_REPO $VISION_QUANT + $VISION_MMPROJ, ~22GB)"
   mkdir -p "$W/models/vision"
